@@ -1,0 +1,17 @@
+Cheng|Soon Ong
+Jennifer|Wortman Vaughan
+Fei Fei|Li
+Hal|Daume III
+Tijl|De Bie
+Nando|de Freitas
+Wee Sun|Lee
+Tai Sing|Lee
+Yee Whye|Teh
+Virginia|de Sa
+Ulrike|von Luxburg
+Luc|De Raedt
+Yann|Le Cun
+J. Zico|Kolter
+Hao Helen|Zhang
+Joaquin|Quinonero Candela
+Florence|d\'Alche Buc
