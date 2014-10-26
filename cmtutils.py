@@ -925,7 +925,7 @@ class assignment:
 class tpms:
     """
     """
-    def __init__(self, filename='cmt_export_nips14.txt'):
+    def __init__(self, filename='cmt_export.txt'):
         """Download the status of the TPMS system from Laurent's output script and update reviewers in the system who's TPMS status is unavailable."""
         # Get Laurent's latest list (this is updated hourly).
         url = 'http://papermatching.cs.toronto.edu/paper_collection/cmt_export_nips14.txt'
@@ -1085,7 +1085,7 @@ class drive_store(sheet, ReadReviewer):
     def __init__(self, spreadsheet_key, worksheet_name):
         sheet.__init__(self, spreadsheet_key, worksheet_name)
 
-    def read(self, column_fields, header_rows=1):
+    def read(self, column_fields=None, header_rows=1, index_field='Email'):
         """Read potential reviewer entries from a google doc."""
         entries = sheet.read(self, column_fields, header_rows)
 
@@ -1096,23 +1096,23 @@ class drive_store(sheet, ReadReviewer):
             entries['Email'].apply(lambda value: value.strip().lower() if not pd.isnull(value) else '')
         if 'Name' in entries.columns:
             entries['FirstName'], entries['MiddleNames'], entries['LastName']  = split_names(entries['Name'])
-        return entries
+        self.reviewers=entries
 
     def read_meta_reviewers(self):
         column_fields={'1':'Name', '2':'Institute', '3':'Subjects', '4':'Email', '5':'Answer'}
-        self.reviewers=self.read(column_fields)
+        self.read(column_fields)
 
 
     def read_reviewer_suggestions(self):
         """Read in reviewer suggestions as given by area chairs through the reviewer suggestion form."""
         column_fields={'1':'TimeStamp', '2':'FirstName', '3':'LastName', '4':'MiddleNames', '5':'Email', '6':'Institute', '7':'Nominator', '9':'ScholarID'}
-        self.reviewers=self.read(column_fields)
+        self.read(column_fields)
 
     def read_nips_reviewer_suggestions(self):
         """Read in reviewer suggestions from lists of people who've had NIPS papers since a given year."""
         yearkey = 'PapersSince' + year
         column_fields={'1':'FirstName', '2':'MiddleNames', '3':'LastName', '4':'Email', '5':'Institute', '6':'ScholarID', '7':yearkey, '8':'decision'}
-        self.reviewers=self.read(column_fields)
+        self.read(column_fields)
 
 
 
@@ -1447,6 +1447,8 @@ class reviewerdb:
         if fieldname:
             if not fieldvalue:
                 fieldvalue = 'NULL'
+            elif isinstance(fieldvalue, float) and np.isnan(fieldvalue):
+                fieldvalue = 'NULL'
             elif isinstance(fieldvalue, str) or isinstance(fieldvalue, unicode):
                 fieldvalue = "'" + fieldvalue.strip().replace("'", "''") + "'"
             else:
@@ -1603,7 +1605,7 @@ class reviewerdb:
             print_string += (self._string_sql("SELECT ID, FirstName, LastName FROM Reviewers WHERE ID=" + str(id[0]))).strip()
             print_string += '\n'
         print print_string
-        ans = raw_input(reviewer['FirstName'] + ' ' + reviewer['LastName'] +  " add to a given ID? N")
+        ans = raw_input(reviewer['FirstName'] + ' ' + reviewer['LastName'] +  " add to a given ID. Reply N to add new user? N")
         if ans == 'N' or ans=='n' or ans=='':
             return None
         else:
