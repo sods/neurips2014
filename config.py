@@ -9,7 +9,7 @@ config = ConfigParser.ConfigParser()
 default_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'defaults.cfg'))
 
 # These files are optional 
-# This specifies configurations that are typically specific to the machine (it is found alongside the GPy installation).
+# This specifies configurations that are typically specific to the machine (it is found alongside the installation).
 local_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'conference.cfg'))
 
 # This specifies configurations specific to the user (it is found in the user home directory)
