@@ -13,7 +13,8 @@ from lxml import etree # for reading from CMT
 from HTMLParser import HTMLParser
 # General set up.
 
-from pods.util import download_url, display_url
+from pods.util import download_url
+from pods.notebook import display_url
 
 # interface to google docs
 from pods.google import *
