@@ -189,7 +189,19 @@ class review_report:
                     email_text = intro + body + closing 
                     mailer.send(session=session,recipient=email, cc=cc_list, body=email_text, subject=subject, reply_to=program_chair_email)
 
-        
+    def _repr_html_(self):
+        """Return an HTML representation of the entire report."""
+        html = ''
+        max_return = 50
+        count = 0
+        for id, paper in self.attention_report.sort(columns='attention_score', ascending=False).iterrows():
+            html += paper.comments
+            count += 1
+            if count > 50:
+                html += '<br><br><b>Report continues, only 50 papers shown ...</b>'
+                return html
+        return html
+
     def attention_score(self, paper, issues=None):
         """Compute the attention score for a given paper."""
         if issues is None:
@@ -209,18 +221,24 @@ class review_report:
 
     def generate_html_comments(self):
         """Generate html comments for each paper."""
-        html_comments={}
+        self.html_comments={}
         attention_scores={}
         for paper in set(self.reviews.index):
             p = self.reviews.loc[paper]
             issues = self.issues(paper)
             attention_score = self.attention_score(paper, issues)
             html_comment = self.generate_html_comment(paper, issues)
-            html_comment = '\n<h3>Paper '  + paper + ' ' + list(p.Title)[0] + '</h3>\n\n' + html_comment + '<br>\nAttention Score: ' + str(attention_score)
+            if type(p) is pd.DataFrame:
+                title = list(p.Title)[0]
+            else:
+                title = p.Title
+            html_comment = '\n<h3>Paper '  + paper + ' ' + title + '</h3>\n\n' + html_comment + '<br>\nAttention Score: ' + str(attention_score)
 
-            html_comments[paper] = html_comment
+            self.html_comments[paper] = html_comment
             attention_scores[paper] = attention_score
-        self.attention_report = pd.DataFrame({'comments': pd.Series(html_comments), 'attention_score':pd.Series(attention_scores)})
+        self.attention_report = pd.DataFrame({'comments': pd.Series(self.html_comments), 'attention_score':pd.Series(attention_scores)})
+        self.attention_report.sort(columns='attention_score', inplace=True, ascending=False)
+
 
     def spreadsheet_comments(self):
         """Generate comments suitable for placing in a spreadsheet."""
@@ -304,7 +322,7 @@ class review_report:
         if num_revs<self.expected_reviews:
             if num_revs < 2:
                 issues.append('one_review')
-                return
+                return issues
             else:
                 issues.append('too_few_reviews')
         prob = p.AcceptProbability.mean()
@@ -352,11 +370,19 @@ class review_report:
         """Given general comments about the paper, ignoring specific issues."""
         paper = str(paper)
         p = self.reviews.loc[paper]
-        base_comments = 'Quality scores: ' + ', '.join(map(str,p.Quality)) + '<br>\n'
-        base_comments += 'Calibrated quality scores: ' + ', '.join(map(my_format,p.CalibratedQuality)) + '<br>\n'
-        base_comments += 'Confidence scores: ' + ', '.join(map(str, p.Conf)) + '<br>\n'
-        base_comments += 'Impact scores: ' + ', '.join(map(str, p.Impact)) + '<br>\n'
+        
+        if type(p) is pd.DataFrame: # there has to be a better way of doing this! loc returns string or data frame depending on number of reviewers of paper.
+            base_comments = 'Quality scores: ' + ', '.join(map(str,p.Quality)) + '<br>\n'
+            base_comments += 'Calibrated quality scores: ' + ', '.join(map(my_format,p.CalibratedQuality)) + '<br>\n'
+            base_comments += 'Confidence scores: ' + ', '.join(map(str, p.Conf)) + '<br>\n'
+            base_comments += 'Impact scores: ' + ', '.join(map(str, p.Impact)) + '<br>\n'
 
+        else:
+            base_comments = 'Quality scores: ' + str(p.Quality) + '<br>\n'
+            base_comments += 'Calibrated quality scores: ' + my_format(p.CalibratedQuality) + '<br>\n'
+            base_comments += 'Confidence scores: ' + str(p.Conf) + '<br>\n'
+            base_comments += 'Impact scores: ' + str(p.Impact) + '<br>\n'
+            
         base_comments += "<br>\nSome things to consider:<br>\n"
         prob = p.AcceptProbability.mean()
         base_comments += "Accept probability for this paper is <b>" + my_format(100*prob) + '%</b>.<br>\n'
@@ -421,10 +447,15 @@ class review_report:
         review_tag = {}
         review_comments = {}
         review_confidence = {}
-        for paperid, review in p.iterrows():
-            review_tag[review.Email] = review.FirstName + ' ' + review.LastName + ' (' + review.Email + ')'
-            review_comments[review.Email] = review.Comments
-            review_confidence[review.Email] = review.Conf
+        if type(p) is pd.DataFrame:
+            for paperid, review in p.iterrows():
+                review_tag[review.Email] = review.FirstName + ' ' + review.LastName + ' (' + review.Email + ')'
+                review_comments[review.Email] = review.Comments
+                review_confidence[review.Email] = review.Conf
+        else:
+            review_tag[p.Email] = p.FirstName + ' ' + p.LastName + ' (' + p.Email + ')'
+            review_comments[p.Email] = p.Comments
+            review_confidence[p.Email] = p.Conf
         comment = ''
         for issue in issues:
             s = issue.split('+')
@@ -722,6 +753,8 @@ class assignment:
     def __minus__(self, other):
         """ Overloading of the '+' operator. for more control, see self.add """
         return self.diff(other)
+    
+        
 
     def reviewer_area_chairs(self, reviewer):
         """Return the area chairs responsible for managing a reviewer."""
@@ -952,14 +985,30 @@ class assignment:
         val = self.score_vec.value.quantile(self.score_quantile)
         print "Retaining scores greater than", self.score_quantile*100, "percentile which is", val
         self.score_vec = self.score_vec[self.score_vec.value >val]
-        #score_vec = score_vec[score_vec.value > 0.1]
         self.score_vec = self.score_vec[pd.notnull(self.score_vec.value)]
         self.score_vec.columns = ['PaperID', 'Email', 'Score']
         self.score_vec = self.score_vec.sort_index(by='Score', ascending=False)
         self.score_vec.reset_index(inplace=True)
 
-    
-    def write_assignment(self, reviewer_type='reviewer'):
+    def _repr_html_(self):
+        """Print an html representation of the assignment."""
+        html = '<table>'
+        html+= '<tr><td>Paper</td><td>Area Chair</td><td>Reviewers</td></tr>\n'
+        for paper in list(set(self.assignment_paper['reviewer']) 
+                          | set(self.assignment_paper['metareviewer'])):
+            html += '<tr><td>' + paper + '</td>'
+            if paper in self.assignment_paper['metareviewer']:
+                html += '<td>' + ','.join(self.assignment_paper['metareviewer'][paper]) + '</td>'
+            else:
+                html += '<td></td>'
+            if paper in self.assignment_paper['reviewer']:
+                html += '<td>' + ','.join(self.assignment_paper['reviewer'][paper]) + '</td></tr>\n'
+            else:
+                html += '<td></td>'
+        html += '</table>' 
+        return html
+
+    def write(self, reviewer_type='reviewer'):
         """Write out the assignment into an xml file for import into CMT."""
         f = open(os.path.join(self.directory, reviewer_type + '_assignments.xml'), 'w')
         f.write('<assignments>\n')
