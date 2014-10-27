@@ -444,7 +444,7 @@ class review_report:
 class reviewers:
     """
     Reviewer class that combines information from the local data base
-    and expoerts from CMT in subject areas to characterize the
+    and exports from CMT on the reviewer subject areas to characterize the
     reviewers for paper matching
     """
     def __init__(self, directory=None, filename='users.xls', subject_file='Reviewer Subject Areas.xls'):
@@ -468,7 +468,7 @@ class reviewers:
         self.users = cmt_users.join(local_users, how='inner', rsuffix='_a')
 
     def load_subjects(self, filename='Reviewer Subject Areas.xls'):
-        """Load the reviewer's chosen subject areas."""
+        """Load the reviewer's chosen subject areas from the CMT export file."""
         data = xl_read(filename=os.path.join(self.directory, filename), index='Selected Subject Area', dataframe=True, worksheet_number=1)
         data.items.reset_index(inplace=True)
         #reviewer_subject.replace(to_replace
@@ -486,22 +486,23 @@ class papers:
     Paper class that loads information from CMT about the papers'
     subject areas for use in paper to reviewer matching
     """
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, filename='Papers.xls'):
         if directory is None:
             directory = cmt_data_directory
         self.directory = directory
         self.subjects = {}
-        self.load()
+        self.load(filename)
         print "Loaded Papers."
         self.load_subjects()
         print "Loaded Paper Subjects."
 
     def load(self, filename='Papers.xls'):
-        a = xl_read(filename=filename, header_row=3, index='Paper ID', dataframe=True)
+        """Load in the information about the papers, abstracts, titles, authors etc from CMT exports. `Submissions -> View Active Papers -> Export -> Metadata as Excel`"""
+        a = xl_read(filename=filename, header_row=3, index='ID', dataframe=True)
         self.papers = a.items
 
     def load_subjects(self, filename = 'Paper Subject Areas.xls'):
-
+        """Load paper subject areas from a CMT export file."""
         data = xl_read(filename=os.path.join(self.directory, filename), index='Paper ID', dataframe=True, worksheet_number=1)
         data.items.reset_index(inplace=True)
         data.items.rename(columns={'index':'Paper ID'}, inplace=True)
@@ -526,8 +527,24 @@ class similarities:
         if directory is None:
             directory = cmt_data_directory
         self.directory = directory
+
         self.reviewers = reviewers
         self.submissions = submissions
+        # check that all subjects are in both reviewers and papers.
+        self.subjects = list(set(self.reviewers.subjects['Primary'].index) 
+                             | set(self.reviewers.subjects['Secondary'].index)
+                             | set(self.submissions.subjects['Primary'].index)
+                             | set(self.submissions.subjects['Secondary'].index))
+        
+        for subjects in [self.reviewers.subjects, self.submissions.subjects]:
+            for group in ['Primary', 'Secondary']:
+                missing_subjects = list(set(self.subjects)
+                                        -set(subjects[group].index))
+                for subject in missing_subjects:
+                    vals = np.zeros(subjects[group].shape[1])
+                    subjects[group].loc[subject] = vals
+
+
         self.load_tpms()
         print "Loaded TPMS scores"
         self.load_bids()
@@ -537,6 +554,11 @@ class similarities:
         
 
     def load_bids(self, filename='Bids.txt'):
+        """Load in Bids information. This is obtained through the `Assignments
+        & Conflicts -> Automatic Assignment Wizard`. You need to go through
+        the wizard process almost until the end. Then select `Export Data for
+        Custom Assignment`. Choose the Tab Delimited format and you will
+        download a file `Bids.txt`."""
         self.bids = pd.read_csv(os.path.join(self.directory, filename), delimiter='\t', index_col=False, converters={'Email':str.lower, 'PaperID':str})
         self.bids = self.bids.pivot(index='PaperID', columns='Email', values='BidValue') # Moves the column records into a matrix (with lots of misisng values)
         self.bids.replace(to_replace=0, value=-1, inplace=True)
@@ -553,7 +575,19 @@ class similarities:
 
 
     def load_tpms(self, filename = 'External Matching Scores(Toronto Paper Matching System).txt'):
+        """Load in TPMS information. If you are working with Laurent Charlin
+        and TPMS you may have access to the Toronto paper matching
+        scores. They are obtained byy first running the match `More ->
+        External Reviewer Matching -> Submit Papers for Reviewer
+        Matching`. And then you can export the data through the
+        `Assignments & Conflicts -> Automatic Assignment Wizard`. You
+        need to go through the wizard process almost until the
+        end. Then select `Export Data for Custom Assignment`. Choose
+        the Tab Delimited format and you will download a file
+        `External Matching Scores(Toronto Paper Matching System).txt`.
 
+        """
+        
         self.affinity = pd.read_csv(os.path.join(self.directory, filename), delimiter='\t', index_col=False, na_values=['N/A'], converters={'PaperID':str}).fillna(0)
         self.affinity.set_index(['PaperID'], inplace=True)
         self.affinity.columns = map(str.lower, self.affinity.columns)
@@ -567,13 +601,20 @@ class similarities:
         
 
     def compute_subject_similarity(self, alpha=0.5):
-        """Compute the similarity between submissions and reviewers by subject keyword."""
+        """Compute the similarity between submissions and reviewers by subject
+        keyword. Similarities are computed on the basis of keyword
+        similarity using primary and secondary keyword matches.
+        :param alpha: gives the weighting between primary and secondary keyword match.  
+        :type alpha: float
+
+        """
         self._sim = {}
+        
         self._sim['Primary'] = pd.DataFrame(np.dot(self.submissions.subjects['Primary'].T, self.reviewers.subjects['Primary']), 
                                       index=self.submissions.subjects['Primary'].columns, 
                                       columns=self.reviewers.subjects['Primary'].columns)
-        self._sim['Secondary'] = pd.DataFrame(np.dot((self.submissions.subjects['Primary'] + self.submissions.subjects['Secondary']).T, 
-                                               (self.reviewers.subjects['Primary'] + self.reviewers.subjects['Secondary'])), 
+        self._sim['Secondary'] = pd.DataFrame(np.dot((self.submissions.subjects['Primary'].values + self.submissions.subjects['Secondary'].values).T, 
+                                               (self.reviewers.subjects['Primary'].values + self.reviewers.subjects['Secondary'])), 
                                       index=self.submissions.subjects['Primary'].columns, 
                                       columns=self.reviewers.subjects['Primary'].columns)
         self._sim['Secondary'] = (1/np.sqrt(self.reviewers.subjects['Secondary'].sum(axis=0)+1))*self._sim['Secondary']
@@ -772,18 +813,24 @@ class assignment:
         a = xl_read(filename=os.path.join(self.directory, filename), header_row=3, index='Reviewer Email', dataframe=True, lower_index=True)
         self.quota = a.items
 
-    def unassigned_reviewers(self, reviewers, group=None):
+    def unassigned_reviewers(self, reviewers, reviewer_type='reviewer', group=None):
         """Return a true/false series of reviewers that aren't at full allocation."""
-        an = pd.Series(np.zeros(len(reviewers.users.index)), index=reviewers.users.index)
+        an = pd.Series(False, index=reviewers.users.index)
         for idx in an.index:
-            #print idx
             if self.group.loc[idx]:
-                if idx in self.assignment_reviewer:
-                    num_assigned = len(self.assignment_reviewer[idx])+1
+                if idx in self.assignment_reviewer[reviewer_type]:
+                    num_assigned = len(self.assignment_reviewer[reviewer_type][idx])
                 else:
                     num_assigned = 0
-                if not (num_assigned>self.max_papers or (idx in list(self.quota.index) and num_assigned>self.quota['Quota'][idx])):
-                    an.loc[idx] = True
+                if num_assigned<self.max_papers:
+                    if idx not in list(self.quota.index):
+                        an.loc[idx]=True
+                    elif num_assigned<min([self.quota['Quota'][idx], self.max_papers]):
+                        an.loc[idx] = True
+                    else:
+                        an.loc[idx] = False
+                else:
+                    an.loc[idx] = False
         return an
 
     def unassigned_papers(self, submissions, reviewer_type='reviewer'):
@@ -792,11 +839,13 @@ class assignment:
         for idx in an.index:
             #print idx
             if idx in self.assignment_paper[reviewer_type]:
-                num_assigned = len(self.assignment_paper[reviewer_type][idx])+1
+                num_assigned = len(self.assignment_paper[reviewer_type][idx])
             else:
                 num_assigned = 0
-            if not (num_assigned>self.max_reviewers):
+            if num_assigned<self.max_reviewers:
                 an.loc[idx] = True
+            else:
+                an.loc[idx] = False
         return an
 
     def clear_assignment(self, reviewer_type='reviewer'):
@@ -809,7 +858,7 @@ class assignment:
             self.assignment_reviewer[type] = {}
 
     def allocate(self,  reviewer_type='reviewer'):
-        """Allocate papers to reviewers."""
+        """Allocate papers to reviewers. This function goes through the similarities list *once* allocating papers. """
         
         for idx in list(self.score_vec.index):
             papers = str(self.score_vec['PaperID'][idx]).split('_')
@@ -1226,7 +1275,7 @@ class xl_read:
 
                             if dataframe:
                                 if not index:
-                                    raise "Data frame needs an index."
+                                    raise ValueError, "Data frame needs an index."
                                 if col==index:
                                     if lower_index:
                                         item[col] = cell.text.lower()
@@ -1236,9 +1285,9 @@ class xl_read:
                     if row_count > header_row:
                         if dataframe:
                             if not index:
-                                raise "Data frame needs an index."
+                                raise ValueError, "Data frame needs an index."
                             if not index in item.keys():
-                                raise "Data has no column", index, "for index."
+                                raise ValueError, "Data has no column" + index + "for index."
                             index_val = item[index]
                             del item[index]
                             items.append(pd.DataFrame(item, index=[index_val]))
