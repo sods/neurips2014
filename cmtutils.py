@@ -23,7 +23,9 @@ from config import *
 conf_short_name = config.get('conference', 'short_name')
 conf_year = config.get('conference', 'year')
 program_chair_email = config.get('conference', 'chair_email')
+program_chair_gmails = config.get('conference', 'chair_gmails').split(';')
 cmt_data_directory = os.path.expandvars(config.get('cmt', 'export_directory'))
+buddy_pair_key = os.path.expandvars(config.get('google docs', 'buddy_pair_keys'))
 
 # When recruiting reviewers we add in people who area chaired at ICML since 2008, at NIPS since 2001 and at AISTATS since 2011.
 # Conferences with area chair information stored
@@ -1405,6 +1407,9 @@ class reviewerdb:
         self.filename=filename
         self.dbfile = os.path.join(cmt_data_directory,self.filename)
 
+    def _repr_html_(self):
+        """Create an HTML representation of the database for display in the notebook"""
+        return self.to_data_frame()._repr_html_()
     def _add_keys_if_present(self, id, reviewer, keys):
         for key in keys:
             if key in reviewer.keys():
