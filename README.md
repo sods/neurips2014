@@ -64,8 +64,7 @@ To build up the set of reviewers for your conference you will have several
 sources.
 
 * One is the old list of users from a CMT export from an older conference. To
-import these to your local data base you use [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Add Reviewers to
-Database.ipynb). It also describes how to import suggestions from Area Chairs,
+import these to your local data base you use [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Add Reviewers to Database.ipynb). It also describes how to import suggestions from Area Chairs,
 assuming these are stored in a Google Doc (a good way to do this is to provide a
 form that the area chairs can fill in).
 
@@ -88,8 +87,7 @@ produce semi-colon separated list of emails for mailing reviewers from CMT.
 
 It is very easy in CMT to create a new account for an author, even if this
 author is already in the system. This leads to a lot of accounts where
-authorship and reviewer are separate. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Find duplicate
-users.ipynb) tries to find the duplicate users. In 2014, however, there were so
+authorship and reviewer are separate. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Find duplicate users.ipynb) tries to find the duplicate users. In 2014, however, there were so
 many that we decided the best thing to do was to warn all authors who hadn't
 entered their conflict domains to do so. When we first checked for this, there
 were around 1500 authors without conflict domains entred. This meant that there
@@ -135,8 +133,7 @@ is forced when they log in as reviewers!) we can compute a similarities to match
 area chairs and reviewers to papers. The responsibility for paper allocation
 really falls with area chairs, and the responsibility for matching area chairs
 to papers falls with the program chairs. But we can perform a preliminary
-allocation with scripts based on similarity scores. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Paper
-Allocation.ipynb) attempts to allocate papers to area chairs and reviewers.
+allocation with scripts based on similarity scores. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Paper Allocation.ipynb) attempts to allocate papers to area chairs and reviewers.
 
 I also wrote a [blog post](http://inverseprobability.com/2014/06/28/paper-
 allocation-for-nips/) on the paper allocation as performed with Corinna for NIPS
@@ -156,8 +153,7 @@ either of these situations arises then you need to email the area chair to
 reallocate the paper (this is the area chair's responsibility, but unfortunately
 CMT provides no way for the reviewer to know who the area chair for a given
 paper is). However, there is also no formal mechanism within CMT to inform newly
-allocated reviewers that they have gained a paper. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Assignment
-Diffs.ipynb) computes differences in allocation between the initial allocation
+allocated reviewers that they have gained a paper. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Assignment Diffs.ipynb) computes differences in allocation between the initial allocation
 file (as provided to the reviewers after edits by the area chairs). It then
 gives a list of emails for reviewers who have gained a paper. These reviewers
 can then be emailed to let them know they have a new paper in their allocation.
@@ -167,8 +163,7 @@ can then be emailed to let them know they have a new paper in their allocation.
 We worked hard to try and create a body of reviewers with the right expertise.
 But did it work? In [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Reviewer Expertise.ipynb) we explore the
 expertise of the NIPS 2014 reviewing body. We imported the number of papers
-associated with each reviewer since 2007 using [this notebook](Update with NIPS
-Paper Publications.ipynb).
+associated with each reviewer since 2007 using [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Update with NIPS Paper Publications.ipynb).
 
 ## 3 After Reviews are Received
 
