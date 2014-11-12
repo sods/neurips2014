@@ -3,6 +3,16 @@
 
 ### 28th October 2014 Neil D. Lawrence
 
+As well as pandas and the standard numpy/scipy stack, the library has the following dependencies: `lxml`, `openpyxl`, `gdata`, `pods`
+
+```
+pip install lxml
+pip install openpyxl
+pip install gdata
+pip install pods
+```
+
+
 In 2014 [Corinna Cortes](http://research.google.com/pubs/author121.html) and I
 were NIPS program Co-Chairs. Alan Saul was our Program Manager. As part of the
 process we wrote a lot of scripts for processing the data. The scripts I wrote
