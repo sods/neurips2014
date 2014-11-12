@@ -26,7 +26,7 @@ program_chair_email = config.get('conference', 'chair_email')
 program_chair_gmails = config.get('conference', 'chair_gmails').split(';')
 cmt_data_directory = os.path.expandvars(config.get('cmt', 'export_directory'))
 buddy_pair_key = os.path.expandvars(config.get('google docs', 'buddy_pair_key'))
-global_results_key = os.path.expandvars(config.get('google docs', 'global_results'))
+global_results_key = os.path.expandvars(config.get('google docs', 'global_results_key'))
 
 # When recruiting reviewers we add in people who area chaired at ICML since 2008, at NIPS since 2001 and at AISTATS since 2011.
 # Conferences with area chair information stored
