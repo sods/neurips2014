@@ -13,7 +13,8 @@ from lxml import etree # for reading from CMT
 from HTMLParser import HTMLParser
 # General set up.
 
-from pods.util import download_url, display_url
+from pods.util import download_url
+from pods.notebook import  display_url
 
 # interface to google docs
 from pods.google import *
@@ -1025,7 +1026,9 @@ class pc_groupings():
             Based on processed reviews form 2014/8/12."""
 
     def update_report(self, groups=None):
-        """Update the report with information from the spreadsheets."""
+        """
+        Update the report with information from the spreadsheets.
+        """
         if groups is None:
             groups = self.spreadsheet_keys.keys()
         for group in groups:
@@ -1066,18 +1069,21 @@ class pc_groupings():
         self.report = data_frame.loc[papers].combine_first(self.report)
 
     def data_from_spreadsheet(self, group):
-        """Extract the data from one of the groups spreadsheets, return a data frame containing the information."""
-        sheet = sheet(spreadsheet_key=self.spreadsheet_keys[group], gd_client=self.gd_client, docs_client=self.docs_client)
-        self.gd_client = sheet.gd_client
-        self.docs_client = sheet.docs_client
-        return sheet.read(header_rows=2)
+        """
+        Extract the data from one of the group's spreadsheets, return a
+        data frame containing the information.
+        """
+        ss = sheet(spreadsheet_key=self.spreadsheet_keys[group], gd_client=self.gd_client, docs_client=self.docs_client)
+        self.gd_client = ss.gd_client
+        self.docs_client = ss.docs_client
+        return ss.read(header_rows=2)
 
     def data_to_spreadsheet(self, group, data_frame, comment=''):
         """Update the spreadsheet with the latest version of the group report."""
-        sheet = sheet(spreadsheet_key=self.spreadsheet_key[group], gd_client=self.gd_client, docs_client=self.docs_client,)
-        self.gd_client = sheet.gd_client
-        self.docs_client = sheet.docs_client
-        sheet.write(data_frame, comment=comment, header_rows=2)
+        ss = sheet(spreadsheet_key=self.spreadsheet_key[group], gd_client=self.gd_client, docs_client=self.docs_client,)
+        self.gd_client = ss.gd_client
+        self.docs_client = ss.docs_client
+        ss.write(data_frame, comment=comment, header_rows=2)
 
 
 class drive_store(sheet, ReadReviewer):
