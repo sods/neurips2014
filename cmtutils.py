@@ -492,7 +492,7 @@ class reviewers:
         print "Loaded Reviewer Subjects."
 
     def load(self, filename='users.xls', localdb='reviewers.db'):
-        a = xl_read(filename=filename, header_row=3, index='Email', dataframe=True, lower_index=True)
+        a = xl_read(filename=filename, header_row=3, index_col='Email', dataframe=True, lower_index=True)
         cmt_users = a.items
         # Now load in the local store of information
         con = sqlite3.connect(os.path.join(cmt_data_directory, localdb))
@@ -503,7 +503,7 @@ class reviewers:
 
     def load_subjects(self, filename='Reviewer Subject Areas.xls'):
         """Load the reviewer's chosen subject areas from the CMT export file."""
-        data = xl_read(filename=os.path.join(self.directory, filename), index='Selected Subject Area', dataframe=True, worksheet_number=1)
+        data = xl_read(filename=os.path.join(self.directory, filename), index_col='Selected Subject Area', dataframe=True, worksheet_number=1)
         data.items.reset_index(inplace=True)
         #reviewer_subject.replace(to_replace
         self.subjects = {}
@@ -532,12 +532,12 @@ class papers:
 
     def load(self, filename='Papers.xls'):
         """Load in the information about the papers, abstracts, titles, authors etc from CMT exports. `Submissions -> View Active Papers -> Export -> Metadata as Excel`"""
-        a = xl_read(filename=filename, header_row=3, index='ID', dataframe=True)
+        a = xl_read(filename=filename, header=2, index_col='ID', dataframe=True)
         self.papers = a.items
 
     def load_subjects(self, filename = 'Paper Subject Areas.xls'):
         """Load paper subject areas from a CMT export file."""
-        data = xl_read(filename=os.path.join(self.directory, filename), index='Paper ID', dataframe=True, worksheet_number=1)
+        data = xl_read(filename=os.path.join(self.directory, filename), index_col='Paper ID', dataframe=True, worksheet_number=1)
         data.items.reset_index(inplace=True)
         data.items.rename(columns={'index':'Paper ID'}, inplace=True)
         #reviewer_subject.replace(to_replace
@@ -627,7 +627,7 @@ class similarities:
         self.affinity.columns = map(str.lower, self.affinity.columns)
         for reviewer in list(set(self.reviewers.users[self.reviewers.users['IsReviewer']=='Yes'].index) - set(self.affinity.columns)):
             self.affinity[reviewer.strip()] = 0.
-        #data = xl_read(, index='Paper ID', dataframe=True)
+        #data = xl_read(, index_col='Paper ID', dataframe=True)
         #affinity = data.items
         # Scale affinities to be between 0 and 1.
         self.affinity -= self.affinity.values.min()
@@ -846,7 +846,7 @@ class assignment:
         print "Performed allocation"
 
     def load_quota(self, filename='Reviewer Quotas.xls'):
-        a = xl_read(filename=os.path.join(self.directory, filename), header_row=3, index='Reviewer Email', dataframe=True, lower_index=True)
+        a = xl_read(filename=os.path.join(self.directory, filename), header=2, index_col='Reviewer Email', dataframe=True, lower_index=True)
         self.quota = a.items
 
     def unassigned_reviewers(self, reviewers, reviewer_type='reviewer', group=None):
@@ -1248,7 +1248,8 @@ class area_chair_read:
                   chair['SubjectString'] = ''
               self.chairs.append(chair)
 
-class csv_read(ReadReviewer):
+# legacy code used in Update with NIPS Paper Publications.ipynb
+class old_csv_read(ReadReviewer):
     def __init__(self, filename='users.csv', header_row=1):
         self.filename = filename
         self.reviewers = []
@@ -1271,15 +1272,27 @@ class csv_read(ReadReviewer):
                         reviewer[field[i]] = entry
                     self.reviewers.append(reviewer)
 
+class csv_read:
+    """
+    Read a data frame from a csv file in a similar format as xl_read to allow csv and xls to be loaded interchangeably.
+    """
+    def __init__(self, filename='file.csv', header=0, mapping=None, index_col=None, lower_index=False, ignore = [], parse_dates = []):
+        self.items = pd.read_csv(filename, header=header, parse_dates=parse_dates)
+        self.items.rename(columns=mapping, inplace=True)
+        self.items.set_index(index_col, inplace=True)
+        self.filename = filename
+
 class xl_read:
     """
     Read a data frame from an excel file in the form CMT exports (which is XML derived).
     """
-    def __init__(self, filename='file.xls', header_row=3, mapping=None, index=None, dataframe=False, worksheet_number=0, lower_index=False, ignore = []):
+    def __init__(self, filename='file.xls', header=0, mapping=None, index_col=None, dataframe=False, worksheet_number=0, lower_index=False, ignore = [], parse_dates=[]):
+        heading_row = header+1
         self.filename = filename
         fname = os.path.join(cmt_data_directory, self.filename)
         self.column = {}
         items = []
+      
         with open(fname) as xml_file:
             doc = etree.parse(xml_file)
 
@@ -1310,7 +1323,7 @@ class xl_read:
                             col_count += 1
                         else:
                             col_count = int(ind)
-                        if row_count==header_row:
+                        if row_count==heading_row:
                             if mapping and cell.text in mapping.keys():
                                 text = mapping[cell.text]
                             else:
@@ -1318,7 +1331,7 @@ class xl_read:
                             self.column[str(col_count)] = text
 
 
-                        elif row_count>header_row:
+                        elif row_count>heading_row:
                             col = self.column[str(col_count)]
                             if col in ignore:
                                 continue
@@ -1331,35 +1344,39 @@ class xl_read:
                                 item[col] = cell.text
 
                             if dataframe:
-                                if not index:
+                                if not index_col:
                                     raise ValueError, "Data frame needs an index."
-                                if col==index:
+                                if col==index_col:
                                     if lower_index:
                                         item[col] = cell.text.lower()
                                     else:
                                         item[col] = cell.text
 
-                    if row_count > header_row:
+                    if row_count > heading_row:
                         if dataframe:
-                            if not index:
-                                raise ValueError, "Data frame needs an index."
-                            if not index in item.keys():
-                                raise ValueError, "Data has no column" + index + "for index."
-                            index_val = item[index]
-                            del item[index]
+                            if not index_col:
+                                raise ValueError, "Data frame needs an index column."
+                            if not index_col in item.keys():
+                                raise ValueError, "Data has no column" + index_col + "for index."
+                            index_val = item[index_col]
+                            del item[index_col]
+                            
                             items.append(pd.DataFrame(item, index=[index_val]))
                         else:
                             items.append(item)
         if dataframe:
-            self.items = pd.concat(items)
+            self.items = pd.concat(items)    
+            self.items.index.name = index_col
+            for column in parse_dates:
+                self.items[column] = pd.to_datetime(self.items[column])
         else:
             self.items = items
 # Read CMT Reviews
-class cmt_reviews_read(xl_read):
+class cmt_reviews_read:
     """
     Read an export of the reviews from CMT.
     """
-    def __init__(self, filename='Reviews.xls', header_row=3, dataframe=True):
+    def __init__(self, filename='Reviews.xls', header=2, dataframe=True):
         ignore = ['Confidence', 'Impact Score - Independently of the Quality Score above, this is your opportunity to identify papers that are very different, original, or otherwise potentially impactful for the NIPS community.','Quality Score - Does the paper deserves to be published?', 'Rank', 'RankComment']
         mapping = {'SubmissionId': 'ID',
                    'SubmissionName' : 'Title',
@@ -1369,15 +1386,16 @@ class cmt_reviews_read(xl_read):
                    'Confidence (Numeric)' : 'Conf', 
                    'Confidential comments to the PC members' : 'Confidential',
                    'Please summarize your review in 1-2 sentences' : 'Summary'}
-        xl_read.__init__(self, filename, header_row, mapping, index='ID', dataframe=dataframe, ignore=ignore)
-        self.reviews = self.items
+
+        data = read_xl_or_csv(filename, header=header, mapping=mapping, index_col='ID', dataframe=dataframe, parse_dates=['LastUpdated'])
+        self.reviews = data.items
 
 # Read CMT Papers
-class cmt_papers_read(xl_read):
+class cmt_papers_read:
     """
     Read list of papers exported from CMT under the 'decision' column.
     """
-    def __init__(self, filename='Papers.xls', header_row=3, dataframe=True):
+    def __init__(self, filename='Papers.xls', header=2, dataframe=True):
         mapping = {'Paper ID': 'ID',
                    'Paper Title' : 'Title',
                    'Abstract': 'Abstract',
@@ -1389,22 +1407,32 @@ class cmt_papers_read(xl_read):
                    'Supplemental File': 'SupplementalFile',
                    'Dual Submission Policy': 'DualSubmissionPolicy',
                    'Dual Submissions': 'DualSubmissions'}
-        xl_read.__init__(self, filename, header_row, mapping, index='ID', dataframe=dataframe)
-        self.papers = self.items
+        data = read_xl_or_csv(filename, header, mapping, index_col='ID', dataframe=dataframe)
+        self.papers = data.items
 
-class cmt_reviewers_read(xl_read):
+def read_xl_or_csv(filename, header, mapping, index_col, dataframe, parse_dates=None):
+    """Helper function for switching between xls and csv reads."""
+    _, ext = os.path.splitext(filename)
+    if ext == '.xls':
+        return xl_read(filename, header, mapping, index_col=index_col, dataframe=dataframe, parse_dates=parse_dates)
+    elif ext == '.csv':
+        return csv_read(filename, header, mapping, index_col=index_col, parse_dates=parse_dates)
+    else:
+        raise ValueError("Unknown file extension: " + ext)
+
+class cmt_reviewers_read:
     """
     Read information from a CMT export file into the standard Reviewers
     format.
     """
-    def __init__(self, filename='Conflict Domains.xls', header_row=3, dataframe=False):
+    def __init__(self, filename='Conflict Domains.xls', header=2, dataframe=False):
         mapping = {'MiddleInitial': 'MiddleNames',
                    'Organization' : 'Institute',
                    'Last Name': 'LastName',
                    'First Name': 'FirstName',
                    'Reviewer Type': 'ReviewerType'}
-        xl_read.__init__(self, filename, header_row, mapping, index='Email', dataframe=dataframe)
-        self.reviewers = pd.DataFrame(self.items)
+        data = read_xl_or_csv(filename, header, mapping, index_col, dataframe)
+        self.reviewers = data.items
 
 
 
