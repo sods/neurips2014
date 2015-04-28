@@ -102,21 +102,21 @@ class review_report:
     """
     Class that looks at calibrated reviews and generates text reports or email reports based on review sumaries.
     """
-    def __init__(self, filename=None, 
-                 calibrated_reviews=None, 
-                 attention_scoring=None, 
-                 light_grey=[0.1, 0.9], 
-                 firm_grey=[0.3, 0.7], 
-                 expected_reviews=3, 
-                 short_review_percentile=5., 
+    def __init__(self, filename=None,
+                 calibrated_reviews=None,
+                 attention_scoring=None,
+                 light_grey=[0.1, 0.9],
+                 firm_grey=[0.3, 0.7],
+                 expected_reviews=3,
+                 short_review_percentile=5.,
                  very_short_review_percentile=1.):
 
         if calibrated_reviews is None and filename is not None:
-            calibrated_reviews = pd.io.parsers.read_csv(os.path.join(cmt_data_directory, filename), 
+            calibrated_reviews = pd.io.parsers.read_csv(os.path.join(cmt_data_directory, filename),
                                                         dtype={'PaperID':object})
             calibrated_reviews.set_index(keys='PaperID', inplace=True)
             calibrated_reviews.fillna('', inplace=True)
-        elif ((filename is None and calibrated_reviews is None) or 
+        elif ((filename is None and calibrated_reviews is None) or
               (filename is not None and calibrated_reviews is not None)):
             raise ValueError("You need to provide either filename or calibrated_reviews as keyword arguments")
 
@@ -145,12 +145,12 @@ class review_report:
         else:
             self.attention_scoring=attention_scoring
 
-    def email_html_comments(self, sendto_dict, 
-                            intro=None, 
-                            closing=None, 
-                            subject=None, 
-                            attention_threshold=0, 
-                            cc_list = [program_chair_email], 
+    def email_html_comments(self, sendto_dict,
+                            intro=None,
+                            closing=None,
+                            subject=None,
+                            attention_threshold=0,
+                            cc_list = [program_chair_email],
                             rankby='attention_score'):
         """Email html comments to area chairs."""
 
@@ -159,16 +159,16 @@ class review_report:
         if intro is None:
             intro = """Hi,<br><br>
 
-            This is an automated report that tries to identify problems with 
-            papers that need attention. You may already be on top of these 
+            This is an automated report that tries to identify problems with
+            papers that need attention. You may already be on top of these
             issues, but this report may still be helpful.<br><br>
 
-            The report ranks papers by an 'attention score' to try and order 
+            The report ranks papers by an 'attention score' to try and order
             which papers require most attention.<br><br>
 
-            Calibrated quality scores are scores that take the estimated 
-            'reviewer bias' into account. The probability of accept is based 
-            on a probabilistic model that accounts for the reviewer bias we 
+            Calibrated quality scores are scores that take the estimated
+            'reviewer bias' into account. The probability of accept is based
+            on a probabilistic model that accounts for the reviewer bias we
             estimated and the associated uncertainty.<br><br>"""
 
         if closing is None:
@@ -180,16 +180,16 @@ class review_report:
             """ + chair_informal_names + "<br>\n" + conf_short_name + ' ' + conf_year + " Program Chairs"
 
         for email, papers in sendto_dict.iteritems():
-            print "Sending mails summarizing papers", ', '.join(papers), 'to', email 
+            print "Sending mails summarizing papers", ', '.join(papers), 'to', email
         ans = raw_input('Are you sure you want to send mails (Y/N)?')
         if ans=='Y':
             mailer = gmail.email(gmail_username=gmail_account)
             for email, papers in sendto_dict.iteritems():
                 body = ''
                 for id, report in self.attention_report.loc[papers][self.attention_report.loc[papers].attention_score>attention_threshold].sort(columns=rankby, ascending=False).iterrows():
-                    body += report.comments 
+                    body += report.comments
                 if len(body)>0:
-                    email_text = intro + body + closing 
+                    email_text = intro + body + closing
                     mailer.send(session=session,recipient=email, cc=cc_list, body=email_text, subject=subject, reply_to=program_chair_email)
 
     def _repr_html_(self):
@@ -209,7 +209,7 @@ class review_report:
         """Compute the attention score for a given paper."""
         if issues is None:
             issues = self.issues(paper)
-            
+
         attention_score = 0
         for issue in issues:
             attention_score += self.attention_scoring[issue.split('+')[0]]
@@ -278,34 +278,34 @@ class review_report:
             spotlight[paper] = ''
             accept[paper] = ''
             discussions[paper] = p['Number Of Discussions'][0]
-        self.attention_report = pd.DataFrame({'comments': pd.Series(comments), 
-                                              'attention_score':pd.Series(attention_scores), 
-                                              'quality':pd.Series(quality_scores), 
-                                              'calibrated_quality': pd.Series(calibrated_quality_scores), 
-                                              'confidence':pd.Series(confidence_scores), 
-                                              'impact':pd.Series(impact_scores), 
-                                              'reviewers':pd.Series(reviewer_list), 
-                                              'paper_title':paper_title, 
-                                              'prob_accept':prob_accept, 
-                                              'notes':notes, 
-                                              'talk':talk, 
-                                              'spotlight':spotlight, 
-                                              'accept':accept, 
+        self.attention_report = pd.DataFrame({'comments': pd.Series(comments),
+                                              'attention_score':pd.Series(attention_scores),
+                                              'quality':pd.Series(quality_scores),
+                                              'calibrated_quality': pd.Series(calibrated_quality_scores),
+                                              'confidence':pd.Series(confidence_scores),
+                                              'impact':pd.Series(impact_scores),
+                                              'reviewers':pd.Series(reviewer_list),
+                                              'paper_title':paper_title,
+                                              'prob_accept':prob_accept,
+                                              'notes':notes,
+                                              'talk':talk,
+                                              'spotlight':spotlight,
+                                              'accept':accept,
                                               'discussions':discussions})
 
-        column_presentation_order = ['paper_title', 
-                                     'prob_accept', 
-                                     'attention_score', 
-                                     'discussions', 
-                                     'reviewers', 
-                                     'quality', 
-                                     'calibrated_quality', 
-                                     'confidence', 
-                                     'impact', 
-                                     'comments', 
-                                     'notes', 
-                                     'accept', 
-                                     'talk', 
+        column_presentation_order = ['paper_title',
+                                     'prob_accept',
+                                     'attention_score',
+                                     'discussions',
+                                     'reviewers',
+                                     'quality',
+                                     'calibrated_quality',
+                                     'confidence',
+                                     'impact',
+                                     'comments',
+                                     'notes',
+                                     'accept',
+                                     'talk',
                                      'spotlight']
 
         column_sort_order = ['attention_score', 'prob_accept']
@@ -321,7 +321,7 @@ class review_report:
         issues = []
 
         # Check for requisite number of reviews
-        num_revs = list(self.reviews.index).count(paper) 
+        num_revs = list(self.reviews.index).count(paper)
         if num_revs<self.expected_reviews:
             if num_revs < 2:
                 issues.append('one_review')
@@ -334,7 +334,7 @@ class review_report:
         if prob >= self.light_grey_area[0] and prob < self.light_grey_area[1]:
             if prob >= self.firm_grey_area[0] and prob<self.firm_grey_area[1]:
                 issues.append('firm_grey_area')
-            else: 
+            else:
                 issues.append('light_grey_area')
 
         # Check if paper is likely to be accepted
@@ -373,7 +373,7 @@ class review_report:
         """Given general comments about the paper, ignoring specific issues."""
         paper = str(paper)
         p = self.reviews.loc[paper]
-        
+
         if type(p) is pd.DataFrame: # there has to be a better way of doing this! loc returns string or data frame depending on number of reviewers of paper.
             base_comments = 'Quality scores: ' + ', '.join(map(str,p.Quality)) + '<br>\n'
             base_comments += 'Calibrated quality scores: ' + ', '.join(map(my_format,p.CalibratedQuality)) + '<br>\n'
@@ -385,7 +385,7 @@ class review_report:
             base_comments += 'Calibrated quality scores: ' + my_format(p.CalibratedQuality) + '<br>\n'
             base_comments += 'Confidence scores: ' + str(p.Conf) + '<br>\n'
             base_comments += 'Impact scores: ' + str(p.Impact) + '<br>\n'
-            
+
         base_comments += "<br>\nSome things to consider:<br>\n"
         prob = p.AcceptProbability.mean()
         base_comments += "Accept probability for this paper is <b>" + my_format(100*prob) + '%</b>.<br>\n'
@@ -415,7 +415,7 @@ class review_report:
 
         base_comments = self.base_comments(paper)
         return base_comments + self.comment(paper, comments, issues)
-        
+
     def summary_comment(self, paper, issues=None):
         """ Generate short summary comment for a specific paper. These comments are suitable for spreadsheet entry."""
 
@@ -437,15 +437,15 @@ class review_report:
         comments['very_short_review'] = "{reviewer} comments only {comment_length} chars long. "
         comments['short_review'] = "{reviewer} comments only {comment_length} chars long. "
         return self.comment(paper, comments, issues)
-        
-        
+
+
     def comment(self, paper, comment_dict, issues=None):
         """Generate comments for given paper given a dictionary of comments for specific issues."""
         if issues is None:
             issues = self.issues(paper)
         paper = str(paper)
         p = self.reviews.loc[paper]
-        num_revs = list(self.reviews.index).count(paper) 
+        num_revs = list(self.reviews.index).count(paper)
         review_span = p.Quality.max() - p.Quality.min()
         review_tag = {}
         review_comments = {}
@@ -464,7 +464,7 @@ class review_report:
             s = issue.split('+')
             if len(s)>1:
                 reviewer = s[1]
-                c = comment_dict[s[0]].format(reviewer=review_tag[reviewer], 
+                c = comment_dict[s[0]].format(reviewer=review_tag[reviewer],
                                           comment=review_comments[reviewer],
                                           comment_length=len(review_comments[reviewer]),
                                           reviewer_confidence = review_confidence[reviewer],
@@ -472,7 +472,7 @@ class review_report:
                                           review_span=review_span)
             else:
                 c = comment_dict[s[0]].format(num_revs=num_revs, review_span=review_span)
-            comment += c     
+            comment += c
         return comment
 
 class reviewers:
@@ -497,7 +497,7 @@ class reviewers:
         # Now load in the local store of information
         con = sqlite3.connect(os.path.join(cmt_data_directory, localdb))
         local_users = pd.read_sql('SELECT * from Reviewers', con, index_col='Email')
-        
+
         # Build a user data base which has the shared info
         self.users = cmt_users.join(local_users, how='inner', rsuffix='_a')
 
@@ -565,11 +565,11 @@ class similarities:
         self.reviewers = reviewers
         self.submissions = submissions
         # check that all subjects are in both reviewers and papers.
-        self.subjects = list(set(self.reviewers.subjects['Primary'].index) 
+        self.subjects = list(set(self.reviewers.subjects['Primary'].index)
                              | set(self.reviewers.subjects['Secondary'].index)
                              | set(self.submissions.subjects['Primary'].index)
                              | set(self.submissions.subjects['Secondary'].index))
-        
+
         for subjects in [self.reviewers.subjects, self.submissions.subjects]:
             for group in ['Primary', 'Secondary']:
                 missing_subjects = list(set(self.subjects)
@@ -583,9 +583,15 @@ class similarities:
         print "Loaded TPMS scores"
         self.load_bids()
         print "Loaded bids"
+
+        # TAKE CARE OF MISSING TPMS ROWS - AK
+        diff_index = self.bids.index.difference(self.affinity.index)
+        for idx in diff_index:
+            self.affinity.loc[idx] = 0
+
         self.compute_subject_similarity()
         self.compute_scores()
-        
+
 
     def load_bids(self, filename='Bids.txt'):
         """Load in Bids information. This is obtained through the `Assignments
@@ -621,7 +627,7 @@ class similarities:
         `External Matching Scores(Toronto Paper Matching System).txt`.
 
         """
-        
+
         self.affinity = pd.read_csv(os.path.join(self.directory, filename), delimiter='\t', index_col=False, na_values=['N/A'], converters={'PaperID':str}).fillna(0)
         self.affinity.set_index(['PaperID'], inplace=True)
         self.affinity.columns = map(str.lower, self.affinity.columns)
@@ -632,24 +638,24 @@ class similarities:
         # Scale affinities to be between 0 and 1.
         self.affinity -= self.affinity.values.min()
         self.affinity /= self.affinity.values.max()
-        
+
 
     def compute_subject_similarity(self, alpha=0.5):
         """Compute the similarity between submissions and reviewers by subject
         keyword. Similarities are computed on the basis of keyword
         similarity using primary and secondary keyword matches.
-        :param alpha: gives the weighting between primary and secondary keyword match.  
+        :param alpha: gives the weighting between primary and secondary keyword match.
         :type alpha: float
 
         """
         self._sim = {}
-        
-        self._sim['Primary'] = pd.DataFrame(np.dot(self.submissions.subjects['Primary'].T, self.reviewers.subjects['Primary']), 
-                                      index=self.submissions.subjects['Primary'].columns, 
+
+        self._sim['Primary'] = pd.DataFrame(np.dot(self.submissions.subjects['Primary'].T, self.reviewers.subjects['Primary']),
+                                      index=self.submissions.subjects['Primary'].columns,
                                       columns=self.reviewers.subjects['Primary'].columns)
-        self._sim['Secondary'] = pd.DataFrame(np.dot((self.submissions.subjects['Primary'].values + self.submissions.subjects['Secondary'].values).T, 
-                                               (self.reviewers.subjects['Primary'].values + self.reviewers.subjects['Secondary'])), 
-                                      index=self.submissions.subjects['Primary'].columns, 
+        self._sim['Secondary'] = pd.DataFrame(np.dot((self.submissions.subjects['Primary'].values + self.submissions.subjects['Secondary'].values).T,
+                                               (self.reviewers.subjects['Primary'].values + self.reviewers.subjects['Secondary'])),
+                                      index=self.submissions.subjects['Primary'].columns,
                                       columns=self.reviewers.subjects['Primary'].columns)
         self._sim['Secondary'] = (1/np.sqrt(self.reviewers.subjects['Secondary'].sum(axis=0)+1))*self._sim['Secondary']
         self._sim['Secondary'] = ((1/np.sqrt(self.submissions.subjects['Secondary'].sum(axis=0)+1))*self._sim['Secondary'].T).T
@@ -657,7 +663,7 @@ class similarities:
 
     def compute_scores(self, alpha = 0.5, b=1.5):
         """Combine TPMS, subject matching and bids into an overal score."""
-        self.scores = (alpha*self.affinity + (1-alpha)*self.subject_similarity) 
+        self.scores = (alpha*self.affinity + (1-alpha)*self.subject_similarity)
         self.scores = self.scores*b**self.bids
 
 class assignment_diff:
@@ -672,11 +678,11 @@ class assignment_diff:
         self.loss_paper = {}
         self.gain_reviewer = {}
         self.loss_reviewer = {}
-        
+
         for reviewer_type in ['reviewer', 'metareviewer']:
             self.loss_reviewer[reviewer_type] = {}
             self.gain_reviewer[reviewer_type] = {}
-            papers = set(assignment1.assignment_paper[reviewer_type]) & set(assignment2.assignment_paper[reviewer_type]) 
+            papers = set(assignment1.assignment_paper[reviewer_type]) & set(assignment2.assignment_paper[reviewer_type])
             for paper in papers:
                 if paper not in assignment2.assignment_paper[reviewer_type]:
                     self.gain_paper[paper] = assignment1.assignment_paper[reviewer_type][paper]
@@ -690,7 +696,7 @@ class assignment_diff:
                     diff = list(set(assignment1.assignment_paper[reviewer_type][paper])-set(assignment2.assignment_paper[reviewer_type][paper]))
                     if len(diff)>0:
                         self.loss_paper[paper] = diff
-        
+
             reviewers = set(assignment1.assignment_reviewer[reviewer_type]) & set(assignment2.assignment_reviewer[reviewer_type])
             for reviewer in reviewers:
                 if reviewer not in assignment2.assignment_reviewer[reviewer_type]:
@@ -727,7 +733,7 @@ class assignment_diff:
                 else:
                     print "Warning paper", paper, "has no score for reviewer", reviewer
         return score
-              
+
 
 class assignment:
     """
@@ -737,7 +743,7 @@ class assignment:
 
     """
     def __init__(self, directory=None, max_reviewers=3, max_papers=4,  meta_reviewers_per_paper=1):
-        
+
         if directory is None:
             directory = cmt_data_directory
         self.directory = directory
@@ -756,8 +762,8 @@ class assignment:
     def __minus__(self, other):
         """ Overloading of the '+' operator. for more control, see self.add """
         return self.diff(other)
-    
-        
+
+
 
     def reviewer_area_chairs(self, reviewer):
         """Return the area chairs responsible for managing a reviewer."""
@@ -803,13 +809,13 @@ class assignment:
             with open(os.path.join(self.directory, filename)) as xml_file:
                 doc = etree.parse(xml_file)
             self.assignment_paper[reviewer_type] = {submission.get('submissionId'):[reviewer.get('email').lower() for reviewer in submission.xpath('./reviewer')] for submission in doc.xpath('/assignments/submission')}
-            self._reviewer_from_paper(reviewer_type)                
+            self._reviewer_from_paper(reviewer_type)
 
         elif filename[-4:] == '.xls':
             raise ValueError("un-implemented file type.")
         else:
             raise ValueError("unimplemented file type.")
-        
+
     def _reviewer_from_paper(self, reviewer_type='reviewer'):
         """
         Set assignment_reviewer assuming assignment_paper is set correctly.
@@ -836,7 +842,7 @@ class assignment:
 
     def make_assignment(self, similarities, group=None, score_quantile=0.7, reviewer_type='reviewer'):
         if group is None:
-            group = (similarities.reviewers.users['IsMetaReviewer']=='No') & (similarities.reviewers.users['IsReviewer']=='Yes')            
+            group = (similarities.reviewers.users['IsMetaReviewer']=='No') & (similarities.reviewers.users['IsReviewer']=='Yes')
         self.score_quantile = score_quantile
         self.prep_assignment()
         self.update_group(group)
@@ -895,7 +901,7 @@ class assignment:
 
     def allocate(self,  reviewer_type='reviewer'):
         """Allocate papers to reviewers. This function goes through the similarities list *once* allocating papers. """
-        
+
         for idx in list(self.score_vec.index):
             papers = str(self.score_vec['PaperID'][idx]).split('_')
             reviewer = str(self.score_vec['Email'][idx])
@@ -916,7 +922,7 @@ class assignment:
             num_assigned = len(self.assignment_reviewer[reviewer_type][reviewer]) + len(papers)
             if num_assigned>self.max_papers or (reviewer in list(self.quota.index) and num_assigned>self.quota['Quota'][reviewer]):
                 continue
-            
+
             # check paper isn't already assigned.
             for paper in papers:
                 if paper in self.assignment_reviewer[reviewer_type][reviewer]:
@@ -928,7 +934,7 @@ class assignment:
             for paper in papers:
                 self.assignment_paper[reviewer_type][paper].append(reviewer)
             self.assignment_reviewer[reviewer_type][reviewer] += papers
-            
+
     def load_shotgun(self, filename='ConstraintsGroup1.txt'):
         """
         Some papers have a very strong keyword clustering, and we'd like
@@ -954,7 +960,7 @@ class assignment:
                     self.conflicts_by_reviewer[reviewer].append(paper)
                 else:
                     self.conflicts_by_reviewer[reviewer] = [paper]
-        
+
 
     def rank_similarity_scores(self, similarities):
         """
@@ -976,7 +982,7 @@ class assignment:
         # merge shotgun papers for ranking.
         for cluster in self.shotgun_clusters:
             cluster_name = '_'.join(cluster)
-            rank_scores.loc[cluster_name] = rank_scores.loc[cluster[0]]         
+            rank_scores.loc[cluster_name] = rank_scores.loc[cluster[0]]
             for paper in cluster[1:]:
                 rank_scores.loc[cluster_name] += rank_scores.loc[paper]
             rank_scores.loc[cluster_name]/=len(cluster)
@@ -997,7 +1003,7 @@ class assignment:
         """Print an html representation of the assignment."""
         html = '<table>'
         html+= '<tr><td>Paper</td><td>Area Chair</td><td>Reviewers</td></tr>\n'
-        for paper in list(set(self.assignment_paper['reviewer']) 
+        for paper in list(set(self.assignment_paper['reviewer'])
                           | set(self.assignment_paper['metareviewer'])):
             html += '<tr><td>' + paper + '</td>'
             if paper in self.assignment_paper['metareviewer']:
@@ -1008,7 +1014,7 @@ class assignment:
                 html += '<td>' + ','.join(self.assignment_paper['reviewer'][paper]) + '</td></tr>\n'
             else:
                 html += '<td></td>'
-        html += '</table>' 
+        html += '</table>'
         return html
 
     def write(self, reviewer_type='reviewer'):
@@ -1022,7 +1028,7 @@ class assignment:
             f.write('  </submission>\n')
         f.write('</assignments>\n')
         f.close()
-        
+
 class tpms:
     """
     """
@@ -1118,12 +1124,12 @@ class pc_groupings():
 
         comment="""Click Me for Notes!
             Based on processed reviews form 2014/8/12.
-            This report gives the status of the papers that don't conflict within your buddy-group. 
-            Please use it to identify papers where there may be ongoing problems. 
-            Look out for papers with a high attention score and little or no discussion. 
-            Your notes can be placed in the 'note' column. 
+            This report gives the status of the papers that don't conflict within your buddy-group.
+            Please use it to identify papers where there may be ongoing problems.
+            Look out for papers with a high attention score and little or no discussion.
+            Your notes can be placed in the 'note' column.
             Tentative accept/talk/spotlight decisions can be made by placing a 'y' for yes or 'm' for maybe in the relevant column."""
-        comment_conflicted="""These are papers that conflict with your buddy group, they will need to be dealt with separately. 
+        comment_conflicted="""These are papers that conflict with your buddy group, they will need to be dealt with separately.
             Based on processed reviews form 2014/8/12."""
 
     def update_report(self, groups=None):
@@ -1260,7 +1266,7 @@ class old_csv_read(ReadReviewer):
         field = []
         with open(fname, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            
+
             for row in reader:
                 reviewer = {}
                 row_count+=1
@@ -1292,7 +1298,7 @@ class xl_read:
         fname = os.path.join(cmt_data_directory, self.filename)
         self.column = {}
         items = []
-      
+
         with open(fname) as xml_file:
             doc = etree.parse(xml_file)
 
@@ -1301,11 +1307,11 @@ class xl_read:
                     'ss':'urn:schemas-microsoft-com:office:spreadsheet'}
 
         ws = doc.xpath('/ss:Workbook/ss:Worksheet', namespaces=namespaces)
-        if len(ws) > 0: 
+        if len(ws) > 0:
             if not worksheet_number<len(ws):
                 raise "Error worksheet number does not exist."
             tables = ws[worksheet_number].xpath('./ss:Table', namespaces=namespaces)
-            if len(tables) > 0: 
+            if len(tables) > 0:
                 rows = tables[0].xpath('./ss:Row', namespaces=namespaces)
                 row_count = 0
                 for row in rows:
@@ -1360,12 +1366,12 @@ class xl_read:
                                 raise ValueError, "Data has no column" + index_col + "for index."
                             index_val = item[index_col]
                             del item[index_col]
-                            
+
                             items.append(pd.DataFrame(item, index=[index_val]))
                         else:
                             items.append(item)
         if dataframe:
-            self.items = pd.concat(items)    
+            self.items = pd.concat(items)
             self.items.index.name = index_col
             for column in parse_dates:
                 self.items[column] = pd.to_datetime(self.items[column])
@@ -1383,7 +1389,7 @@ class cmt_reviews_read:
                    'Comments to author(s).  First provide a summary of the paper, and then address the following criteria:  Quality, clarity, originality and significance.   (For detailed reviewing guidelines, see http://nips.cc/PaperInformation/ReviewerInstructions)' : 'Comments',
                    'Quality Score - Does the paper deserves to be published? (Numeric)' : 'Quality',
                    'Impact Score - Independently of the Quality Score above, this is your opportunity to identify papers that are very different, original, or otherwise potentially impactful for the NIPS community. (Numeric)' : 'Impact',
-                   'Confidence (Numeric)' : 'Conf', 
+                   'Confidence (Numeric)' : 'Conf',
                    'Confidential comments to the PC members' : 'Confidential',
                    'Please summarize your review in 1-2 sentences' : 'Summary'}
 
@@ -1409,6 +1415,34 @@ class cmt_papers_read:
                    'Dual Submissions': 'DualSubmissions'}
         data = read_xl_or_csv(filename, header, mapping, index_col='ID', dataframe=dataframe)
         self.papers = data.items
+
+# Read CMT metareviews
+class cmt_metareviews_read(xl_read):
+    """
+    Read the metareviews from CMT for analysis.
+    """
+    def __init__(self, filename='Reviews.xls', header_row=3, dataframe=True):
+        ignore = ['LastUpdated', 'Organization', 'Rank', 'RankComment', 'Overall Rating']
+        mapping = {'SubmissionId': 'ID',
+                   'SubmissionName' : 'Title',
+                   'FirstName' : 'FirstName',
+                   'LastName' : 'LastName',
+                   'Email' : 'Email',
+                   'Overall Rating (Numeric)' : 'Rating',
+                   'Detailed Comments' : 'Comments'}
+        xl_read.__init__(self, filename, header_row, mapping, index='ID', dataframe=dataframe, ignore=ignore)
+        self.reviews = self.items
+
+# Read CMT Author Feedback Status
+class cmt_authorfeedback_read(xl_read):
+    """
+    Read Author Feedback Status for analysis.
+    """
+    def __init__(self, filename='Papers.xls', header_row=3, dataframe=True):
+        mapping = {'Paper ID': 'ID',
+                   'Author Feedback Submitted': 'feedbackStatus'}
+        xl_read.__init__(self, filename, header_row, mapping, index='ID', dataframe=dataframe)
+        self.papers = self.items
 
 def read_xl_or_csv(filename, header, mapping, index_col, dataframe, parse_dates=None):
     """Helper function for switching between xls and csv reads."""
@@ -1502,7 +1536,7 @@ class reviewerdb:
 
     def create_conference_table(self, conference, year):
         tablename = conference.upper() + str(year)
-        conn = sqlite3.connect(self.dbfile)    
+        conn = sqlite3.connect(self.dbfile)
         conn.execute("CREATE TABLE IF NOT EXISTS " + tablename + " (ID INTEGER PRIMARY KEY NOT NULL, SubjectString TEXT NOT NULL);")
         conn.close()
 
@@ -1521,7 +1555,7 @@ class reviewerdb:
         else:
             ans = cur.fetchall()
         conn.close()
-        return ans        
+        return ans
 
     def _string_sql(self, command, commit=False):
         # print results of an sql command on the data base.
@@ -1538,7 +1572,7 @@ class reviewerdb:
         return string
 
     def set_reviewer(self, id):
-        """Set whether or not the user is a reviewer."""    
+        """Set whether or not the user is a reviewer."""
         self.update_field(id, 'IsReviewer', 1)
 
     def get_field(self, id, fieldname=None):
@@ -1649,7 +1683,7 @@ class reviewerdb:
                     print "Multiple matches for reviewer with email: ", email
                 else:
                     idlist.append(ids[0][0])
-        return idlist    
+        return idlist
 
     def match_reviewer(self, reviewer, yes=False, query=True, match_firstname=False, match_lastname=True, primary_email=False):
           id = None
@@ -1696,10 +1730,10 @@ class reviewerdb:
               print "Lastname/firstname match failed"
               if match_firstname:
                   print "Finding matching first names."
-                  ids = self.firstname_id(reviewer['FirstName']) 
+                  ids = self.firstname_id(reviewer['FirstName'])
               if match_lastname:
                   print "Finding matching last names."
-                  ids += self.lastname_id(reviewer['LastName']) 
+                  ids += self.lastname_id(reviewer['LastName'])
               if len(ids)>0:
                   print "Requesting User input for Name Match."
                   id = self._select_match(ids, reviewer)
@@ -1769,7 +1803,7 @@ class reviewerdb:
             institute = 'of ' + reviewer['Institute']
         print "Current info is: ", reviewer['FirstName'], reviewer['LastName'], "with email", reviewer['Email'],  institute
         print "Google Search:"
-        print  
+        print
 
         url = u"https://www.google.co.uk/search?q="+reviewer['FirstName'].strip()+u"+"+reviewer['LastName'].strip()
         display_url(url)
@@ -1799,7 +1833,7 @@ class reviewerdb:
             ans = raw_input(prompt + '(default: ' + unicode(variable) + ')')
             if not ans == '':
                 return ans
-        return variable      
+        return variable
 
     def add_chaired_conference(self, ID, conference, year, subject='',reviewer=None):
         self.create_conference_table(conference, year)
@@ -1890,7 +1924,7 @@ class reviewerdb:
                         print 'Reviewer with Email ' + Email + ' already exists.'
             if add_reviewer:
                 add_string = '(\'' + Firstname.strip().replace("'", "''") + '\', \'' + Middlenames.strip().replace("'", "''") + '\', \'' + Lastname.strip().replace("'", "''") + '\', \'' + Institute.strip().replace("'", "''") + '\', \'' + Email.strip().replace("'", "''").lower() + '\', \'' + ScholarID.strip().replace("'", "''") + '\', \'' +  Nominator.strip().replace("'", "''") + '\', 1)'
-                conn.execute("""INSERT INTO Reviewers (FirstName, MiddleNames, LastName, Institute, Email, ScholarID, Nominator, Active) 
+                conn.execute("""INSERT INTO Reviewers (FirstName, MiddleNames, LastName, Institute, Email, ScholarID, Nominator, Active)
                                 VALUES """ + add_string);
         conn.commit()
         conn.close()
