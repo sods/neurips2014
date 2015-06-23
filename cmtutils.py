@@ -1373,8 +1373,9 @@ class xl_read:
         if dataframe:
             self.items = pd.concat(items)
             self.items.index.name = index_col
-            for column in parse_dates:
-                self.items[column] = pd.to_datetime(self.items[column])
+            if parse_dates and len(parse_dates)>0:
+                for column in parse_dates:
+                    self.items[column] = pd.to_datetime(self.items[column])
         else:
             self.items = items
 # Read CMT Reviews
