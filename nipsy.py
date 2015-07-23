@@ -9,19 +9,21 @@ import os
 
 # Date of different review events.
 events = {}
-events['reviews'] = dt.datetime(2014, 7, 21, 23, 59)
-events['rebuttal_start'] = dt.datetime(2014, 8, 4, 23, 59)
-events['rebuttal_ends'] = dt.datetime(2014, 8, 11, 23, 59)
-events['start_teleconference'] = dt.datetime(2014, 8, 19, 23, 59)
-events['decisions_despatched'] = dt.datetime(2014, 9, 5, 23, 59)
+# Time stamps from CMT are on separate time? If so add here
+offset = dt.timedelta(hours=0)
+events['reviews'] = dt.datetime(2014, 7, 21, 23, 59) + offset
+events['rebuttal_start'] = dt.datetime(2014, 8, 3, 23, 59) + offset
+events['rebuttal_ends'] = dt.datetime(2014, 8, 11, 23, 59) + offset
+events['start_teleconference'] = dt.datetime(2014, 8, 19, 23, 59) +offset
+events['decisions_despatched'] = dt.datetime(2014, 9, 5, 23, 59) + offset
 
 # Date range across which we have review information.
 review_date_range = pd.date_range('2014/07/01', periods=72, freq='D')
 review_store = ''
+dir_store = os.path.join(os.environ['HOME'], review_store)
 
 def load_review_history():
     """Load in the history of the NIPS reviews."""
-    dir_store = os.path.join(os.environ['HOME'], review_store)
 
     # return load of pickled reviews.
     return pd.io.pickle.read_pickle(os.path.join(dir_store, 'all_reviews.pickle'))
@@ -89,3 +91,7 @@ def late_early_statistic(reviews, column, ylim):
     vals = ttest_ind(cat1, cat2)
     print "t-statistic is", vals[0], "and p-value is", vals[1]
 
+# def top_papers(reviews):
+#     """Compute the top review levels."""
+#     for date in review_date_range:
+        
