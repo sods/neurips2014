@@ -6,6 +6,8 @@ from datetime import timedelta
 import numpy as np
 import os
 
+from config import *
+
 
 # Date of different review events.
 events = {}
@@ -19,14 +21,14 @@ events['decisions_despatched'] = dt.datetime(2014, 9, 5, 23, 59) + offset
 
 # Date range across which we have review information.
 review_date_range = pd.date_range('2014/07/01', periods=72, freq='D')
-review_store = ''
-dir_store = os.path.join(os.environ['HOME'], review_store)
+review_store = os.path.expandvars(config.get('review data', 'directory'))
+review_file = os.path.expandvars(config.get('review data', 'file'))
 
 def load_review_history():
     """Load in the history of the NIPS reviews."""
 
     # return load of pickled reviews.
-    return pd.io.pickle.read_pickle(os.path.join(dir_store, 'all_reviews.pickle'))
+    return pd.io.pickle.read_pickle(os.path.join(review_store, review_file))
 
 def reviews_before(reviews, date):
     "Give a review snapshot of reviews before a certain date."

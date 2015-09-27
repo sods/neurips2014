@@ -492,7 +492,7 @@ class reviewers:
         print "Loaded Reviewer Subjects."
 
     def load(self, filename='users.xls', localdb='reviewers.db'):
-        a = xl_read(filename=filename, header_row=3, index_col='Email', dataframe=True, lower_index=True)
+        a = xl_read(filename=filename, header=2, index_col='Email', dataframe=True, lower_index=True)
         cmt_users = a.items
         # Now load in the local store of information
         con = sqlite3.connect(os.path.join(cmt_data_directory, localdb))
@@ -503,9 +503,10 @@ class reviewers:
 
     def load_subjects(self, filename='Reviewer Subject Areas.xls'):
         """Load the reviewer's chosen subject areas from the CMT export file."""
-        data = xl_read(filename=os.path.join(self.directory, filename), index_col='Selected Subject Area', dataframe=True, worksheet_number=1)
+        data = xl_read(filename=os.path.join(self.directory, filename), index_col='Selected Subject Area', header=2, dataframe=True, worksheet_number=1)
         data.items.reset_index(inplace=True)
         #reviewer_subject.replace(to_replace
+        data.items['index'] = data.items.index
         self.subjects = {}
         stati = ['Primary', 'Secondary']
         for status in stati:
@@ -1363,7 +1364,7 @@ class xl_read:
                             if not index_col:
                                 raise ValueError, "Data frame needs an index column."
                             if not index_col in item.keys():
-                                raise ValueError, "Data has no column" + index_col + "for index."
+                                raise ValueError, "Data has no column " + index_col + " for index."
                             index_val = item[index_col]
                             del item[index_col]
 
