@@ -17,7 +17,7 @@ from pods.util import download_url
 from pods.notebook import display_url
 
 # interface to google docs
-from pods.google import *
+import pods
 from config import *
 
 conf_short_name = config.get('conference', 'short_name')
@@ -1087,20 +1087,20 @@ class ReadReviewer:
 
 class pc_groupings():
     """This class handles the storage and processing of program committee groupings, between buddy pairs, or teleconference groups and the like. Groupings are read from a google document with columns that contain 1) an index to the group [index], 2) the name of the group [group], 3) the program chair responsible for the group [chair], 4) the email address of the the area chair in CMT [email], 5) optionally the gmail address to use for spreadsheet sharing etc. [gmail]"""
-    def __init__(self, spreadsheet_key, conflicts_file, assignment_file, worksheet_name='Sheet1'):
+    def __init__(self, resource_id, conflicts_file, assignment_file, worksheet_name='Sheet1'):
         self.create_spreadsheet = True
-        self.spreadsheet_keys = {}
+        self.resource_ids = {}
         self.assignment = assignment()
         self.assignment.load_assignment(filename=assignment_file, reviewer_type='metareviewer')
-        spreadsheet_keys_file = os.path.join(cmt_data_directory, spreadsheet_key + '.pickle')
+        resource_ids_file = os.path.join(cmt_data_directory, resource_id + '.pickle')
         self.docs_client = None
         self.gd_client = None
         #if these groups have been set up already, the pickle file of the spreadsheet keys should exist.
-        if os.path.isfile(spreadsheet_keys_file):
+        if os.path.isfile(resource_ids_file):
             self.create_spreadsheet = False
-            self.spreadsheet_keys = pickle.load(open(spreadsheet_keys_file, 'rb'))
+            self.resource_ids = pickle.load(open(resource_ids_file, 'rb'))
 
-        bp = sheet(spreadsheet_key=spreadsheet_key, worksheet_name=worksheet_name)
+        bp = pods.google.sheet(resource_id=resource_id, worksheet_name=worksheet_name)
         self.groups = bp.read()
         with open(os.path.join(cmt_data_directory, conflicts_file)) as fin:
             rows = ( line.strip().split('\t') for line in fin)
@@ -1138,7 +1138,7 @@ class pc_groupings():
         Update the report with information from the spreadsheets.
         """
         if groups is None:
-            groups = self.spreadsheet_keys.keys()
+            groups = self.resource_ids.keys()
         for group in groups:
             data_frame = self.data_from_spreadsheet(group)
             self._to_report(group, data_frame)
@@ -1181,26 +1181,26 @@ class pc_groupings():
         Extract the data from one of the group's spreadsheets, return a
         data frame containing the information.
         """
-        ss = sheet(spreadsheet_key=self.spreadsheet_keys[group], gd_client=self.gd_client, docs_client=self.docs_client)
+        ss = pods.google.sheet(resource=resource(id=self.resource_ids[group]), gd_client=self.gd_client, docs_client=self.docs_client)
         self.gd_client = ss.gd_client
         self.docs_client = ss.docs_client
         return ss.read(header_rows=2)
 
     def data_to_spreadsheet(self, group, data_frame, comment=''):
         """Update the spreadsheet with the latest version of the group report."""
-        ss = sheet(spreadsheet_key=self.spreadsheet_key[group], gd_client=self.gd_client, docs_client=self.docs_client,)
+        ss = pods.google.sheet(resource=self.resource[group], gd_client=self.gd_client, docs_client=self.docs_client,)
         self.gd_client = ss.gd_client
         self.docs_client = ss.docs_client
         ss.write(data_frame, comment=comment, header_rows=2)
 
 
-class drive_store(sheet, ReadReviewer):
-    def __init__(self, spreadsheet_key, worksheet_name):
-        sheet.__init__(self, spreadsheet_key, worksheet_name)
+class drive_store(pods.google.sheet, ReadReviewer):
+    def __init__(self, resource, worksheet_name):
+        pods.google.sheet.__init__(self, resource=resource, worksheet_name=worksheet_name)
 
     def read(self, column_fields=None, header_rows=1, index_field='Email'):
         """Read potential reviewer entries from a google doc."""
-        entries = sheet.read(self, column_fields, header_rows)
+        entries = pods.google.sheet.read(self, column_fields, header_rows)
 
         # do some specific post-processing on columns
         if 'ScholarID' in entries.columns:
