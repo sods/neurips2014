@@ -1,4 +1,12 @@
 from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import input
+from builtins import map
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import time
 import os
 import re
@@ -11,7 +19,7 @@ import sqlite3
 import openpyxl # Requires python-openpyxl
 from lxml import etree # for reading from CMT
 
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 # General set up.
 
 from pods.util import download_url
@@ -99,7 +107,7 @@ default_mapping['ScholarID'] = 'ScholarID'
 default_mapping['Nominator'] = 'Nominator'
 
 
-class review_report:
+class review_report(object):
     """
     Class that looks at calibrated reviews and generates text reports or email reports based on review sumaries.
     """
@@ -124,8 +132,8 @@ class review_report:
         self.reviews=calibrated_reviews
         self.short_review_percentile = short_review_percentile
         self.very_short_review_percentile = very_short_review_percentile
-        self.comment_length_very_low_threshold = self.reviews.comment_length.quantile(self.very_short_review_percentile/100.)
-        self.comment_length_low_threshold = self.reviews.comment_length.quantile(self.short_review_percentile/100.)
+        self.comment_length_very_low_threshold = self.reviews.comment_length.quantile(old_div(self.very_short_review_percentile,100.))
+        self.comment_length_low_threshold = self.reviews.comment_length.quantile(old_div(self.short_review_percentile,100.))
         self.high_impact_threshold = 1.5
         self.light_grey_area = light_grey
         self.firm_grey_area = firm_grey
@@ -180,12 +188,12 @@ class review_report:
 
             """ + chair_informal_names + "<br>\n" + conf_short_name + ' ' + conf_year + " Program Chairs"
 
-        for email, papers in sendto_dict.iteritems():
+        for email, papers in sendto_dict.items():
             print("Sending mails summarizing papers", ', '.join(papers), 'to', email)
-        ans = raw_input('Are you sure you want to send mails (Y/N)?')
+        ans = input('Are you sure you want to send mails (Y/N)?')
         if ans=='Y':
             mailer = gmail.email(gmail_username=gmail_account)
-            for email, papers in sendto_dict.iteritems():
+            for email, papers in sendto_dict.items():
                 body = ''
                 for id, report in self.attention_report.loc[papers][self.attention_report.loc[papers].attention_score>attention_threshold].sort(columns=rankby, ascending=False).iterrows():
                     body += report.comments
@@ -220,7 +228,7 @@ class review_report:
         """Generate a paragraph of comments for each paper."""
         self.generate_html_comments()
         self.comments = {}
-        for paper, comments in self.html_comments.iteritems():
+        for paper, comments in self.html_comments.items():
             self.comments[paper] = strip_tags(self.html_comments[paper])
 
     def generate_html_comments(self):
@@ -476,7 +484,7 @@ class review_report:
             comment += c
         return comment
 
-class reviewers:
+class reviewers(object):
     """
     Reviewer class that combines information from the local data base
     and exports from CMT on the reviewer subject areas to characterize the
@@ -515,9 +523,9 @@ class reviewers:
             self.subjects[status].replace(to_replace=status, value=1, inplace=True)
             self.subjects[status].replace(to_replace=list(set(stati) - set([status])), value=[0], inplace=True)
             self.subjects[status].fillna(0, inplace=True)
-            self.subjects[status].columns = map(str.lower, self.subjects[status].columns)
+            self.subjects[status].columns = list(map(str.lower, self.subjects[status].columns))
 
-class papers:
+class papers(object):
     """
     Paper class that loads information from CMT about the papers'
     subject areas for use in paper to reviewer matching
@@ -551,7 +559,7 @@ class papers:
             self.subjects[status].replace(to_replace=list(set(stati) - set([status])), value=[0], inplace=True)
             self.subjects[status].fillna(0, inplace=True)
 
-class similarities:
+class similarities(object):
     """
     Similarities class, given a papers class object in submissions and
     a reviewers class object as reviewers it computes the similarity
@@ -632,7 +640,7 @@ class similarities:
 
         self.affinity = pd.read_csv(os.path.join(self.directory, filename), delimiter='\t', index_col=False, na_values=['N/A'], converters={'PaperID':str}).fillna(0)
         self.affinity.set_index(['PaperID'], inplace=True)
-        self.affinity.columns = map(str.lower, self.affinity.columns)
+        self.affinity.columns = list(map(str.lower, self.affinity.columns))
         for reviewer in list(set(self.reviewers.users[self.reviewers.users['IsReviewer']=='Yes'].index) - set(self.affinity.columns)):
             self.affinity[reviewer.strip()] = 0.
         #data = xl_read(, index_col='Paper ID', dataframe=True)
@@ -659,8 +667,8 @@ class similarities:
                                                (self.reviewers.subjects['Primary'].values + self.reviewers.subjects['Secondary'])),
                                       index=self.submissions.subjects['Primary'].columns,
                                       columns=self.reviewers.subjects['Primary'].columns)
-        self._sim['Secondary'] = (1/np.sqrt(self.reviewers.subjects['Secondary'].sum(axis=0)+1))*self._sim['Secondary']
-        self._sim['Secondary'] = ((1/np.sqrt(self.submissions.subjects['Secondary'].sum(axis=0)+1))*self._sim['Secondary'].T).T
+        self._sim['Secondary'] = (old_div(1,np.sqrt(self.reviewers.subjects['Secondary'].sum(axis=0)+1)))*self._sim['Secondary']
+        self._sim['Secondary'] = ((old_div(1,np.sqrt(self.submissions.subjects['Secondary'].sum(axis=0)+1)))*self._sim['Secondary'].T).T
         self.subject_similarity = alpha*self._sim['Primary'] + (1-alpha)*self._sim['Secondary']
 
     def compute_scores(self, alpha = 0.5, b=1.5):
@@ -668,7 +676,7 @@ class similarities:
         self.scores = (alpha*self.affinity + (1-alpha)*self.subject_similarity)
         self.scores = self.scores*b**self.bids
 
-class assignment_diff:
+class assignment_diff(object):
     """
     Stores the difference between two assignments. This is useful for
     finding reviewers who have gained allocations or lost allocations
@@ -737,7 +745,7 @@ class assignment_diff:
         return score
 
 
-class assignment:
+class assignment(object):
     """
     Stores an assignment of reviewers to papers. The assignment can
     either be loaded (e.g. as an export from CMT) in or allocated
@@ -971,8 +979,8 @@ class assignment:
         # Allocate 'expert reviewers' those with 2 or more papers.
         rank_scores = similarities.scores.copy()
         # Normalise
-        rank_scores = rank_scores/rank_scores.std()
-        rank_scores = (rank_scores.T/rank_scores.T.std()).T
+        rank_scores = old_div(rank_scores,rank_scores.std())
+        rank_scores = (old_div(rank_scores.T,rank_scores.T.std())).T
 
         for paper in self.conflicts_groups:
             rank_scores.loc[paper][self.conflicts_groups[paper]] = -np.inf
@@ -1031,7 +1039,7 @@ class assignment:
         f.write('</assignments>\n')
         f.close()
 
-class tpms:
+class tpms(object):
     """
     """
     def __init__(self, filename='cmt_export.txt'):
@@ -1082,11 +1090,11 @@ class tpms:
         else:
             raise ValueError('Unknown reviewer type' + ', '.join(reviewer))
 
-class ReadReviewer:
+class ReadReviewer(object):
     def __init__(self, filename):
         self.filename = filename
 
-class pc_groupings():
+class pc_groupings(object):
     """This class handles the storage and processing of program committee groupings, between buddy pairs, or teleconference groups and the like. Groupings are read from a google document with columns that contain 1) an index to the group [index], 2) the name of the group [group], 3) the program chair responsible for the group [chair], 4) the email address of the the area chair in CMT [email], 5) optionally the gmail address to use for spreadsheet sharing etc. [gmail]"""
     def __init__(self, resource_id, conflicts_file, assignment_file, worksheet_name='Sheet1'):
         self.create_spreadsheet = True
@@ -1106,7 +1114,7 @@ class pc_groupings():
         with open(os.path.join(cmt_data_directory, conflicts_file)) as fin:
             rows = ( line.strip().split('\t') for line in fin)
             conflicts_groups = { row[0]:row[1:] for row in rows}
-        papers = conflicts_groups.keys()
+        papers = list(conflicts_groups.keys())
         self.conflicts_by_area_chair = {}
         self.conflicts_dict = {}
         for paper in papers:
@@ -1120,7 +1128,7 @@ class pc_groupings():
 
         self.update_papers()
         all_papers = []
-        for  papers in self._papers.values():
+        for  papers in list(self._papers.values()):
             all_papers += papers
         self.report = pd.DataFrame(index=all_papers)
 
@@ -1139,7 +1147,7 @@ class pc_groupings():
         Update the report with information from the spreadsheets.
         """
         if groups is None:
-            groups = self.resource_ids.keys()
+            groups = list(self.resource_ids.keys())
         for group in groups:
             data_frame = self.data_from_spreadsheet(group)
             self._to_report(group, data_frame)
@@ -1230,7 +1238,7 @@ class drive_store(pods.google.sheet, ReadReviewer):
 
 
 
-class area_chair_read:
+class area_chair_read(object):
   """
   This class reads area chairs from previous conferences
   """
@@ -1280,7 +1288,7 @@ class old_csv_read(ReadReviewer):
                         reviewer[field[i]] = entry
                     self.reviewers.append(reviewer)
 
-class csv_read:
+class csv_read(object):
     """
     Read a data frame from a csv file in a similar format as xl_read to allow csv and xls to be loaded interchangeably.
     """
@@ -1290,7 +1298,7 @@ class csv_read:
         self.items.set_index(index_col, inplace=True)
         self.filename = filename
 
-class xl_read:
+class xl_read(object):
     """
     Read a data frame from an excel file in the form CMT exports (which is XML derived).
     """
@@ -1332,7 +1340,7 @@ class xl_read:
                         else:
                             col_count = int(ind)
                         if row_count==heading_row:
-                            if mapping and cell.text in mapping.keys():
+                            if mapping and cell.text in list(mapping.keys()):
                                 text = mapping[cell.text]
                             else:
                                 text = cell.text
@@ -1364,7 +1372,7 @@ class xl_read:
                         if dataframe:
                             if not index_col:
                                 raise ValueError("Data frame needs an index column.")
-                            if not index_col in item.keys():
+                            if not index_col in list(item.keys()):
                                 raise ValueError("Data has no column " + index_col + " for index.")
                             index_val = item[index_col]
                             del item[index_col]
@@ -1381,7 +1389,7 @@ class xl_read:
         else:
             self.items = items
 # Read CMT Reviews
-class cmt_reviews_read:
+class cmt_reviews_read(object):
     """
     Read an export of the reviews from CMT.
     """
@@ -1400,7 +1408,7 @@ class cmt_reviews_read:
         self.reviews = data.items
 
 # Read CMT Papers
-class cmt_papers_read:
+class cmt_papers_read(object):
     """
     Read list of papers exported from CMT under the 'decision' column.
     """
@@ -1457,7 +1465,7 @@ def read_xl_or_csv(filename, header, mapping, index_col, dataframe, parse_dates=
     else:
         raise ValueError("Unknown file extension: " + ext)
 
-class cmt_reviewers_read:
+class cmt_reviewers_read(object):
     """
     Read information from a CMT export file into the standard Reviewers
     format.
@@ -1473,7 +1481,7 @@ class cmt_reviewers_read:
 
 
 
-class reviewerdb:
+class reviewerdb(object):
     def __init__(self, filename):
         self.filename=filename
         self.dbfile = os.path.join(cmt_data_directory,self.filename)
@@ -1483,7 +1491,7 @@ class reviewerdb:
         return self.to_data_frame()._repr_html_()
     def _add_keys_if_present(self, id, reviewer, keys):
         for key in keys:
-            if key in reviewer.keys():
+            if key in list(reviewer.keys()):
                 if reviewer[key]:
                     a = self.update_field(id, key, reviewer[key])
                     print("Updated ", key, " for ID ", reviewer['FirstName'], reviewer['LastName'], " as ", reviewer[key])
@@ -1570,7 +1578,7 @@ class reviewerdb:
         string = u''
         for row in table:
             for col in row:
-                string += unicode(col) + '\t'
+                string += str(col) + '\t'
             string+='\n'
         return string
 
@@ -1623,7 +1631,7 @@ class reviewerdb:
                 fieldvalue = 'NULL'
             elif isinstance(fieldvalue, float) and np.isnan(fieldvalue):
                 fieldvalue = 'NULL'
-            elif isinstance(fieldvalue, str) or isinstance(fieldvalue, unicode):
+            elif isinstance(fieldvalue, str) or isinstance(fieldvalue, str):
                 fieldvalue = "'" + fieldvalue.strip().replace("'", "''") + "'"
             else:
                 fieldvalue = str(fieldvalue)
@@ -1647,7 +1655,7 @@ class reviewerdb:
         if fieldname:
             if not fieldvalue:
                 fieldvalue = 'NULL'
-            elif isinstance(fieldvalue, str) or isinstance(fieldvalue, unicode):
+            elif isinstance(fieldvalue, str) or isinstance(fieldvalue, str):
                 fieldvalue = "'" + fieldvalue.strip().replace("'", "''") + "'"
             else:
                 fieldvalue = str(fieldvalue)
@@ -1665,7 +1673,7 @@ class reviewerdb:
         """
         id = self.match_reviewer(reviewer, yes=yes, query=query, match_firstname=match_firstname, match_lastname=match_lastname)
         if id:
-            for field, value in fields.iteritems():
+            for field, value in fields.items():
                 self.update_field(id, field, value)
 
     def match_tpms_status(self, tpms, status='unavailable'):
@@ -1779,7 +1787,7 @@ class reviewerdb:
             print_string += (self._string_sql("SELECT ID, FirstName, LastName FROM Reviewers WHERE ID=" + str(id[0]))).strip()
             print_string += '\n'
         print(print_string)
-        ans = raw_input(reviewer['FirstName'] + ' ' + reviewer['LastName'] +  " add to a given ID. Reply N to add new user? N")
+        ans = input(reviewer['FirstName'] + ' ' + reviewer['LastName'] +  " add to a given ID. Reply N to add new user? N")
         if ans == 'N' or ans=='n' or ans=='':
             return None
         else:
@@ -1816,12 +1824,12 @@ class reviewerdb:
             if not proceed == 'Y':
                 print("Not adding user.")
                 return None
-        for key in reviewer.keys():
+        for key in list(reviewer.keys()):
             reviewer[key] = self._query_user(key + ':', reviewer[key], query)
 
         if not yes:
             print("Add reviewer ", reviewer['FirstName'], reviewer['MiddleNames'], reviewer['LastName'], "of", reviewer['Institute'], "with email", reviewer['Email'], "?")
-            ans = raw_input("(Y/N): N?")
+            ans = input("(Y/N): N?")
             if not ans=='Y' and not ans=='y':
                 return self._request_new_reviewer(reviewer)
         self.add_reviewers([reviewer], check_email=True)
@@ -1831,9 +1839,9 @@ class reviewerdb:
         if not query:
             return variable
         if variable=='' or variable==None:
-            return raw_input(prompt)
+            return input(prompt)
         else:
-            ans = raw_input(prompt + '(default: ' + unicode(variable) + ')')
+            ans = input(prompt + '(default: ' + str(variable) + ')')
             if not ans == '':
                 return ans
         return variable
@@ -2009,9 +2017,9 @@ class reviewerdb:
         output="First Name\tMiddle Initial\tLast Name\tEmail\tOrganization\tScholarID\tPapers Since 2012\n"
         for row in rows:
             if row[5]:
-                output+= row[0]+ '\t'+ row[1]+ '\t'+ row[2]+ '\t'+ row[3]+ '\t'+ row[4] + '\t' + 'http://scholar.google.com/citations?user=' + row[5] + '\t' + unicode(row[6]) + '\n'
+                output+= row[0]+ '\t'+ row[1]+ '\t'+ row[2]+ '\t'+ row[3]+ '\t'+ row[4] + '\t' + 'http://scholar.google.com/citations?user=' + row[5] + '\t' + str(row[6]) + '\n'
             else:
-                output+= row[0]+ '\t'+ row[1]+ '\t'+ row[2]+ '\t'+ row[3]+ '\t'+ row[4] + '\t\t' + unicode(row[6]) + '\n'
+                output+= row[0]+ '\t'+ row[1]+ '\t'+ row[2]+ '\t'+ row[3]+ '\t'+ row[4] + '\t\t' + str(row[6]) + '\n'
 
         f = open(outputfile, 'w')
         f.write(output.encode('utf8'))
