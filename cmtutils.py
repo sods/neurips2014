@@ -1208,12 +1208,13 @@ class pc_groupings(object):
 
 
 class drive_store(pods.google.sheet, ReadReviewer):
-    def __init__(self, resource, worksheet_name):
-        pods.google.sheet.__init__(self, resource=resource, worksheet_name=worksheet_name)
-
-    def read(self, column_fields=None, header_rows=1, index_field='Email'):
+    def __init__(self, resource, worksheet_name, index_field='Email', header=1):
+        pods.google.sheet.__init__(self, resource=resource, worksheet_name=worksheet_name, index_field=index_field, header=header)
+        self.reviewers=None
+        
+    def read(self, names=None):
         """Read potential reviewer entries from a google doc."""
-        entries = pods.google.sheet.read(self, column_fields, header_rows)
+        entries = pods.google.sheet.read(self, names=names)
 
         # do some specific post-processing on columns
         if 'ScholarID' in entries.columns:
@@ -1225,21 +1226,28 @@ class drive_store(pods.google.sheet, ReadReviewer):
         self.reviewers=entries
 
     def read_meta_reviewers(self):
-        column_fields={'1':'Name', '2':'Institute', '3':'Subjects', '4':'Email', '5':'Answer'}
-        self.read(column_fields)
+        names=['Name', 'Institute', 'Subjects', 'Email', 'Answer']
+        self.read(names=names)
 
 
     def read_reviewer_suggestions(self):
         """Read in reviewer suggestions as given by area chairs through the reviewer suggestion form."""
-        column_fields={'1':'TimeStamp', '2':'FirstName', '3':'LastName', '4':'MiddleNames', '5':'Email', '6':'Institute', '7':'Nominator', '9':'ScholarID'}
-        self.read(column_fields)
+        names=['TimeStamp', 'FirstName', 'LastName', 'MiddleNames', 'Email', 'Institute', 'Nominator', 'ScholarID']
+        self.read(names=names)
 
     def read_nips_reviewer_suggestions(self):
         """Read in reviewer suggestions from lists of people who've had NIPS papers since a given year."""
         yearkey = 'PapersSince' + year
-        column_fields={'1':'FirstName', '2':'MiddleNames', '3':'LastName', '4':'Email', '5':'Institute', '6':'ScholarID', '7':yearkey, '8':'decision'}
-        self.read(column_fields)
+        names=['FirstName', 'MiddleNames', 'LastName', 'Email', 'Institute', 'ScholarID', yearkey, 'decision']
+        self.read(names=names)
 
+    def _repr_html_(self):
+        output = '<p><b>Google Drive Store Entries: {title}</b> at <a href="{url}" target="_blank">this url.</a>\n</p>'.format(url=self.resource.url, title=self.get_title())
+        if self.reviewers is None:
+            return output
+        else:
+            return output + self.reviewers._repr_html_()
+ 
 
 
 class area_chair_read(object):
