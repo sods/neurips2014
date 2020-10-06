@@ -180,7 +180,7 @@ class review_report:
             """ + chair_informal_names + "<br>\n" + conf_short_name + ' ' + conf_year + " Program Chairs"
 
         for email, papers in sendto_dict.iteritems():
-            print("Sending mails summarizing papers", ', '.join(papers), 'to', email)
+            print "Sending mails summarizing papers", ', '.join(papers), 'to', email
         ans = raw_input('Are you sure you want to send mails (Y/N)?')
         if ans=='Y':
             mailer = gmail.email(gmail_username=gmail_account)
@@ -487,9 +487,9 @@ class reviewers:
         self.directory = directory
         self.subjects = {}
         self.load(filename=filename)
-        print("Loaded Users.")
+        print "Loaded Users."
         self.load_subjects(filename=subject_file)
-        print("Loaded Reviewer Subjects.")
+        print "Loaded Reviewer Subjects."
 
     def load(self, filename='users.xls', localdb='reviewers.db'):
         a = xl_read(filename=filename, header=2, index_col='Email', dataframe=True, lower_index=True)
@@ -527,9 +527,9 @@ class papers:
         self.directory = directory
         self.subjects = {}
         self.load(filename)
-        print("Loaded Papers.")
+        print "Loaded Papers."
         self.load_subjects()
-        print("Loaded Paper Subjects.")
+        print "Loaded Paper Subjects."
 
     def load(self, filename='Papers.xls'):
         """Load in the information about the papers, abstracts, titles, authors etc from CMT exports. `Submissions -> View Active Papers -> Export -> Metadata as Excel`"""
@@ -581,9 +581,9 @@ class similarities:
 
 
         self.load_tpms()
-        print("Loaded TPMS scores")
+        print "Loaded TPMS scores"
         self.load_bids()
-        print("Loaded bids")
+        print "Loaded bids"
 
         # TAKE CARE OF MISSING TPMS ROWS - AK
         diff_index = self.bids.index.difference(self.affinity.index)
@@ -726,13 +726,13 @@ class assignment_diff:
                 if paper in scs.index and reviewer in scs.columns:
                     score -= scs.loc[paper, reviewer]
                 else:
-                    print("Warning paper", paper, "has no score for reviewer", reviewer)
+                    print "Warning paper", paper, "has no score for reviewer", reviewer
         for paper in self.gain_paper:
             for reviewer in self.gain_paper[paper]:
                 if paper in scs.index and reviewer in scs.columns:
                     score += scs.loc[paper, reviewer]
                 else:
-                    print("Warning paper", paper, "has no score for reviewer", reviewer)
+                    print "Warning paper", paper, "has no score for reviewer", reviewer
         return score
 
 
@@ -788,7 +788,7 @@ class assignment:
                 if paper in scs.index and reviewer in scs.columns:
                     score += scs.loc[paper, reviewer]
                 else:
-                    print("Warning paper", paper, "has no score for reviewer", reviewer)
+                    print "Warning paper", paper, "has no score for reviewer", reviewer
         return score
 
     def diff(self, other):
@@ -835,11 +835,11 @@ class assignment:
     def prep_assignment(self):
         """Load quata and shotgun clusters in alongside conflicts in order to prepare for an assignment."""
         self.load_quota()
-        print("Loaded Quota.")
+        print "Loaded Quota."
         self.load_shotgun()
-        print("Loaded shotgun clusters.")
+        print "Loaded shotgun clusters."
         self.load_conflicts()
-        print("Loaded Conflicts")
+        print "Loaded Conflicts"
 
     def make_assignment(self, similarities, group=None, score_quantile=0.7, reviewer_type='reviewer'):
         if group is None:
@@ -848,9 +848,9 @@ class assignment:
         self.prep_assignment()
         self.update_group(group)
         self.rank_similarity_scores(similarities)
-        print("Ranked similarities")
+        print "Ranked similarities"
         self.allocate(reviewer_type=reviewer_type)
-        print("Performed allocation")
+        print "Performed allocation"
 
     def load_quota(self, filename='Reviewer Quotas.xls'):
         a = xl_read(filename=os.path.join(self.directory, filename), header=2, index_col='Reviewer Email', dataframe=True, lower_index=True)
@@ -989,11 +989,11 @@ class assignment:
             rank_scores.loc[cluster_name]/=len(cluster)
             rank_scores.drop(cluster, inplace=True)
 
-        print("Allocating to", len(usergroup), "users.")
+        print "Allocating to", len(usergroup), "users."
         self.score_vec = rank_scores.reset_index()
         self.score_vec = pd.melt(self.score_vec, id_vars=['index']) # Opposite of a pivot!
         val = self.score_vec.value.quantile(self.score_quantile)
-        print("Retaining scores greater than", self.score_quantile*100, "percentile which is", val)
+        print "Retaining scores greater than", self.score_quantile*100, "percentile which is", val
         self.score_vec = self.score_vec[self.score_vec.value >val]
         self.score_vec = self.score_vec[pd.notnull(self.score_vec.value)]
         self.score_vec.columns = ['PaperID', 'Email', 'Score']
@@ -1069,7 +1069,7 @@ class tpms:
                 review_dict['Email'] = email
                 self.reviewers.append(review_dict)
             elif reviewer[4].strip() == 'partial match':
-                print("Partial match with ", ', '.join(reviewer))
+                print "Partial match with ", ', '.join(reviewer)
             else:
                 self.reviewers.append(review_dict)
         elif reviewer[3].strip() == 'available but no pdfs':
@@ -1173,7 +1173,7 @@ class pc_groupings():
                 raise ValueError("Paper " + str(paper) + " not present in spreadsheet obtained from group.")
         for paper in data_frame.index:
             if paper not in papers:
-                print("Paper ", paper, " appears to have been withdrawn (it is not in the Attention Report).")
+                print "Paper ", paper, " appears to have been withdrawn (it is not in the Attention Report)."
         self.report = data_frame.loc[papers].combine_first(self.report)
 
     def data_from_spreadsheet(self, group):
@@ -1485,7 +1485,7 @@ class reviewerdb:
             if key in reviewer.keys():
                 if reviewer[key]:
                     a = self.update_field(id, key, reviewer[key])
-                    print("Updated ", key, " for ID ", reviewer['FirstName'], reviewer['LastName'], " as ", reviewer[key])
+                    print "Updated ", key, " for ID ", reviewer['FirstName'], reviewer['LastName'], " as ", reviewer[key]
 
     def to_data_frame(self):
         """Returns the data base as a pandas data frame."""
@@ -1495,7 +1495,7 @@ class reviewerdb:
     def add_users(self, reviewers, fieldname=None, yes=False, query=True, match_firstname=False, match_lastname=True):
         count = 0
         for i, reviewer in reviewers.iterrows():
-            print("Processed ", count, " out of ", len(reviewers), " reviewers.")
+            print "Processed ", count, " out of ", len(reviewers), " reviewers."
             id = self.match_or_add_reviewer(reviewer, yes=yes, query=query, match_firstname=match_firstname, match_lastname=match_lastname, fieldname=fieldname)
 
             if id:
@@ -1506,9 +1506,9 @@ class reviewerdb:
                     elif reviewer['Answer'] == 'N':
                         self._execute_sql("UPDATE Reviewers SET MetaReviewer=0 WHERE ID=" + str(id) + ";", commit=True)
                 else:
-                    print("No recorded answer from", reviewer['FirstName'], reviewer['LastName'])
+                    print "No recorded answer from", reviewer['FirstName'], reviewer['LastName']
             else:
-                print('Skipping add for', reviewer['Email'], "from reviewer", reviewer['FirstName'], reviewer['MiddleNames'], reviewer['LastName'], "of", reviewer['Institute'])
+                print 'Skipping add for', reviewer['Email'], "from reviewer", reviewer['FirstName'], reviewer['MiddleNames'], reviewer['LastName'], "of", reviewer['Institute']
             count += 1
 
     def create_reviewer_table(self):
@@ -1627,7 +1627,7 @@ class reviewerdb:
             else:
                 fieldvalue = str(fieldvalue)
             if not fieldname=='IsReviewer' and not fieldname=='IsMetaReviewer':
-                print("Updating ", fieldname, " to ", fieldvalue)
+                print "Updating ", fieldname, " to ", fieldvalue
             a = self._execute_sql("UPDATE Reviewers SET " + fieldname + "=" + fieldvalue + " WHERE ID=" + str(id) + ";", commit=True)
         return ans
 
@@ -1651,7 +1651,7 @@ class reviewerdb:
             else:
                 fieldvalue = str(fieldvalue)
             if not fieldname=='IsReviewer' and not fieldname=='IsMetaReviewer':
-                print("Updating ", fieldname, " to ", fieldvalue)
+                print "Updating ", fieldname, " to ", fieldvalue
             ans = self._execute_sql("UPDATE Reviewers SET " + fieldname + "=" + fieldvalue + " WHERE ID IN (" + id_str + ");", commit=True)
         return ans
 
@@ -1680,9 +1680,9 @@ class reviewerdb:
                 email = email.lower()
                 ids = self.all_email_id(email)
                 if len(ids) ==0:
-                    print("No match for reviewer with email: ", email)
+                    print "No match for reviewer with email: ", email
                 elif len(ids) > 1:
-                    print("Multiple matches for reviewer with email: ", email)
+                    print "Multiple matches for reviewer with email: ", email
                 else:
                     idlist.append(ids[0][0])
         return idlist
@@ -1703,17 +1703,17 @@ class reviewerdb:
               return id
 
           # Try to match first name and last name
-          print("No email match.")
-          print("Attempting lastname/firstname match for ", reviewer['FirstName'], reviewer['LastName'], "with email", reviewer['Email'])
+          print "No email match."
+          print "Attempting lastname/firstname match for ", reviewer['FirstName'], reviewer['LastName'], "with email", reviewer['Email']
           ids = self.firstname_lastname_id(reviewer['FirstName'], reviewer['LastName'])
           num_matches = len(ids)
           if num_matches==1:
               id = ids[0][0]
               match = True
-              print("Lastname/firstname match succesful. Substituting primary email.")
+              print "Lastname/firstname match succesful. Substituting primary email."
               proceed = self._query_user('Proceed? (Y):', 'Y', query)
               if not proceed == 'Y':
-                  print("User not modified.")
+                  print "User not modified."
                   id = None
               else:
                   self.augment_emails(id, reviewer['Email'], primary_email)
@@ -1729,20 +1729,20 @@ class reviewerdb:
 
           if num_matches==0:
               ids = []
-              print("Lastname/firstname match failed")
+              print "Lastname/firstname match failed"
               if match_firstname:
-                  print("Finding matching first names.")
+                  print "Finding matching first names."
                   ids = self.firstname_id(reviewer['FirstName'])
               if match_lastname:
-                  print("Finding matching last names.")
+                  print "Finding matching last names."
                   ids += self.lastname_id(reviewer['LastName'])
               if len(ids)>0:
-                  print("Requesting User input for Name Match.")
+                  print "Requesting User input for Name Match."
                   id = self._select_match(ids, reviewer)
                   if id:
                       self.augment_emails(id, reviewer['Email'], primary_email)
           if not id:
-              print("Warning match has failed.")
+              print "Warning match has failed."
           return id
 
     def match_or_add_reviewer(self, reviewer, yes=False, query=True, match_firstname=False, match_lastname=True, fieldname=None, primary_email=False):
@@ -1777,16 +1777,16 @@ class reviewerdb:
         for id in ids:
             print_string += (self._string_sql("SELECT ID, FirstName, LastName FROM Reviewers WHERE ID=" + str(id[0]))).strip()
             print_string += '\n'
-        print(print_string)
+        print print_string
         ans = raw_input(reviewer['FirstName'] + ' ' + reviewer['LastName'] +  " add to a given ID. Reply N to add new user? N")
         if ans == 'N' or ans=='n' or ans=='':
             return None
         else:
             if ans.isdigit():
-                print("Selected reviewer ", int(ans))
+                print "Selected reviewer ", int(ans)
                 return int(ans)
             else:
-                print("Number required or N/n required.")
+                print "Number required or N/n required."
                 return self._select_match(ids, reviewer)
 
     def _request_new_reviewer(self, reviewer, yes=False, query=True):
@@ -1803,23 +1803,23 @@ class reviewerdb:
         institute=''
         if 'Institute' in reviewer and reviewer['Institute']:
             institute = 'of ' + reviewer['Institute']
-        print("Current info is: ", reviewer['FirstName'], reviewer['LastName'], "with email", reviewer['Email'],  institute)
-        print("Google Search:")
-        print()
+        print "Current info is: ", reviewer['FirstName'], reviewer['LastName'], "with email", reviewer['Email'],  institute
+        print "Google Search:"
+        print
 
         url = u"https://www.google.co.uk/search?q="+reviewer['FirstName'].strip()+u"+"+reviewer['LastName'].strip()
         display_url(url)
-        print()
+        print
         if not yes:
             proceed = self._query_user('Proceed? (Y):', 'Y', query)
             if not proceed == 'Y':
-                print("Not adding user.")
+                print "Not adding user."
                 return None
         for key in reviewer.keys():
             reviewer[key] = self._query_user(key + ':', reviewer[key], query)
 
         if not yes:
-            print("Add reviewer ", reviewer['FirstName'], reviewer['MiddleNames'], reviewer['LastName'], "of", reviewer['Institute'], "with email", reviewer['Email'], "?")
+            print "Add reviewer ", reviewer['FirstName'], reviewer['MiddleNames'], reviewer['LastName'], "of", reviewer['Institute'], "with email", reviewer['Email'], "?"
             ans = raw_input("(Y/N): N?")
             if not ans=='Y' and not ans=='y':
                 return self._request_new_reviewer(reviewer)
@@ -1851,11 +1851,11 @@ class reviewerdb:
                     subject = reviewer['SubjectString']
         if self.add_chair(id, conference, year, subject=subject):
             if ID:
-                print("Added Reviewer ID ", ID, " to ", conference, year)
+                print "Added Reviewer ID ", ID, " to ", conference, year
             else:
-                print("Added ", reviewer['Email'], " to ", conference, year)
+                print "Added ", reviewer['Email'], " to ", conference, year
         else:
-            print("Reviewer", id, "already in area chair list.")
+            print "Reviewer", id, "already in area chair list."
 
     def add_chair(self, ID, conference, year, subject):
         """Add an area chair to a conference table."""
@@ -1923,7 +1923,7 @@ class reviewerdb:
                     rows = cur.fetchall()
                     if rows:
                         add_reviewer = False
-                        print('Reviewer with Email ' + Email + ' already exists.')
+                        print 'Reviewer with Email ' + Email + ' already exists.'
             if add_reviewer:
                 add_string = '(\'' + Firstname.strip().replace("'", "''") + '\', \'' + Middlenames.strip().replace("'", "''") + '\', \'' + Lastname.strip().replace("'", "''") + '\', \'' + Institute.strip().replace("'", "''") + '\', \'' + Email.strip().replace("'", "''").lower() + '\', \'' + ScholarID.strip().replace("'", "''") + '\', \'' +  Nominator.strip().replace("'", "''") + '\', 1)'
                 conn.execute("""INSERT INTO Reviewers (FirstName, MiddleNames, LastName, Institute, Email, ScholarID, Nominator, Active)
