@@ -1352,7 +1352,7 @@ class xl_read:
 
                             if dataframe:
                                 if not index_col:
-                                    raise ValueError, "Data frame needs an index."
+                                    raise ValueError("Data frame needs an index.")
                                 if col==index_col:
                                     if lower_index:
                                         item[col] = cell.text.lower()
@@ -1362,9 +1362,9 @@ class xl_read:
                     if row_count > heading_row:
                         if dataframe:
                             if not index_col:
-                                raise ValueError, "Data frame needs an index column."
+                                raise ValueError("Data frame needs an index column.")
                             if not index_col in item.keys():
-                                raise ValueError, "Data has no column " + index_col + " for index."
+                                raise ValueError("Data has no column " + index_col + " for index.")
                             index_val = item[index_col]
                             del item[index_col]
 
