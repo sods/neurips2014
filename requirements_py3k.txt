@@ -42,7 +42,7 @@ pyasn1-modules==0.0.8
 pycparser==2.14
 Pygments==2.7.4
 pylab==0.1.3
-pyOpenSSL==0.15.1
+pyOpenSSL==17.5.0
 pyparsing==2.0.5
 python-dateutil==2.4.2
 pytz==2015.7
