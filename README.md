@@ -3,15 +3,13 @@
 
 ### 28th October 2014 Neil D. Lawrence
 
-As well as pandas and the standard numpy/scipy stack, the library has the following dependencies: `lxml`, `openpyxl`, `gdata`, `pods`
+#### Updated May 2021 with pip installable cmtutils library
+
+As well as pandas and the standard numpy/scipy stack, the library has a dependency on the `cmtutils` module.
 
 ```
-pip install lxml
-pip install openpyxl
-pip install gdata
-pip install pods
+pip install git+https://github.com/lawrennd/cmtutils.git
 ```
-
 
 In 2014 [Corinna Cortes](http://research.google.com/pubs/author121.html) and I
 were NIPS program Co-Chairs. Alan Saul was our Program Manager. As part of the
