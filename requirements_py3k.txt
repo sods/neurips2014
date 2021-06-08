@@ -35,7 +35,7 @@ pandas==0.17.0
 path.py==8.1.2
 pexpect==4.0.1
 pickleshare==0.5
-Pillow==8.1.1
+Pillow==8.2.0
 ptyprocess==0.5
 pyasn1==0.1.9
 pyasn1-modules==0.0.8
