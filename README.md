@@ -3,15 +3,13 @@
 
 ### 28th October 2014 Neil D. Lawrence
 
-As well as pandas and the standard numpy/scipy stack, the library has the following dependencies: `lxml`, `openpyxl`, `gdata`, `pods`
+#### Updated May 2021 with pip installable cmtutils library
+
+As well as pandas and the standard numpy/scipy stack, the library has a dependency on the `cmtutils` module.
 
 ```
-pip install lxml
-pip install openpyxl
-pip install gdata
-pip install pods
+pip install git+https://github.com/lawrennd/cmtutils.git
 ```
-
 
 In 2014 [Corinna Cortes](http://research.google.com/pubs/author121.html) and I
 were NIPS program Co-Chairs. Alan Saul was our Program Manager. As part of the
@@ -30,7 +28,7 @@ we moved things much more towards `pandas` and used CMT as the central
 repository of reviews, exporting them on a daily basis.
 
 A lot of communication is required between CMT through imports and exports. Some
-of the links used for CMT exports are available [here](http://nbviewer.ipython.org/github/sods/conference/blob/master/Useful Links.ipynb).
+of the links used for CMT exports are available [here](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Useful Links.ipynb).
 The various tasks are structured in IPython notebooks below. The code used was
 first written for the NIPS 2014 conference, but ideas were based on experience
 from using CMT for AISTATS 2012 and some preliminary code written then (for
@@ -45,7 +43,7 @@ software has been spun out as part of a suite of tools for [Open Data
 Science](http://inverseprobability.com/2014/07/01/open-data-science/) that is
 [available on github here](https://github.com/sods/ods). These notebooks are
 also available in their own [github repository for conference
-software](https://github.com/sods/conference).
+software](https://github.com/lawrennd/conference).
 
 A note on the code. A lot of this code was written 'live' as reviews were coming
 in or as a crisis required averting. The original code for sharing information
@@ -67,27 +65,27 @@ can't imagine having done it quite like this with a different suite of tools.
 You need to have some discussion with your fellow program chairs about who to
 include on the committee. If you do this by a google document then you can pull
 the results of that discussion down to a local data base, ready for invitation.
-[This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Import Meta Reviewer Suggestions.ipynb) does that.
+[This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Import Meta Reviewer Suggestions.ipynb) does that.
 
 ### Reviewer Data Base Construction
 To build up the set of reviewers for your conference you will have several
 sources.
 
 * One is the old list of users from a CMT export from an older conference. To
-import these to your local data base you use [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Add Reviewers to Database.ipynb). It also describes how to import suggestions from Area Chairs,
+import these to your local data base you use [this notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Add Reviewers to Database.ipynb). It also describes how to import suggestions from Area Chairs,
 assuming these are stored in a Google Doc (a good way to do this is to provide a
 form that the area chairs can fill in).
 
 ### Reviewer Database Update
 
 Reviewers keep on updating their accounts, to get a local refresh of updated
-information from CMT use [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Update DB from CMT Export.ipynb).
+information from CMT use [this notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Update DB from CMT Export.ipynb).
 
 ### Who's Missing from TPMS
 
 Once you've got all your reviewers, then you can ask Laurent Charlin of the
 Toronto Paper Matching System to match them to the TPMS accounts. [This
-notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Remind Missing TPMS.ipynb) downloads the output from Laurent's
+notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Remind Missing TPMS.ipynb) downloads the output from Laurent's
 script and reports email addresses that have are unmatched. You can use it to
 produce semi-colon separated list of emails for mailing reviewers from CMT.
 
@@ -97,7 +95,7 @@ produce semi-colon separated list of emails for mailing reviewers from CMT.
 
 It is very easy in CMT to create a new account for an author, even if this
 author is already in the system. This leads to a lot of accounts where
-authorship and reviewer are separate. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Find duplicate users.ipynb) tries to find the duplicate users. In 2014, however, there were so
+authorship and reviewer are separate. [This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Find duplicate users.ipynb) tries to find the duplicate users. In 2014, however, there were so
 many that we decided the best thing to do was to warn all authors who hadn't
 entered their conflict domains to do so. When we first checked for this, there
 were around 1500 authors without conflict domains entred. This meant that there
@@ -114,7 +112,7 @@ In 2014 we chose to duplicate 10% of papers and have them independently reviewed
 in an effort to check calibration. To do this we split the program committee
 into two parts, allocating reviewers randomly between parts. For area chairs we
 ensured that the expertise was balanced across the two parts. [This
-notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Duplicate Papers.ipynb) randomly selects 10% of the papers for
+notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Duplicate Papers.ipynb) randomly selects 10% of the papers for
 duplication and randomly allocates reviewers to one of two groups for reviewing
 the papers.
 
@@ -122,7 +120,7 @@ the papers.
 
 Some reviewers submit several papers on very similar topics. These must be
 weeded out and either allocated to the same area chair or rejected outright.
-[This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Identify Shotgun Submissions.ipynb) tries to identify such
+[This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Identify Shotgun Submissions.ipynb) tries to identify such
 papers from the CMT abstract download. It also loads in the 40 papers that
 Corinna predicted as shotgun submissions and computes the score associated with
 those.
@@ -131,7 +129,7 @@ those.
 
 Before allocation of papers to Area Chairs and Reviewers, we'd like to get some
 feedback on the sort of papers they are likely to be allocated. This is the
-bidding stage. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Generate Bidding Lists.ipynb) contains code for
+bidding stage. [This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Generate Bidding Lists.ipynb) contains code for
 allocating papers to Area Chairs and Reviewers for bidding.
 
 
@@ -143,7 +141,7 @@ is forced when they log in as reviewers!) we can compute a similarities to match
 area chairs and reviewers to papers. The responsibility for paper allocation
 really falls with area chairs, and the responsibility for matching area chairs
 to papers falls with the program chairs. But we can perform a preliminary
-allocation with scripts based on similarity scores. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Paper Allocation.ipynb) attempts to allocate papers to area chairs and reviewers.
+allocation with scripts based on similarity scores. [This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Paper Allocation.ipynb) attempts to allocate papers to area chairs and reviewers.
 
 I also wrote a [blog post](http://inverseprobability.com/2014/06/28/paper-
 allocation-for-nips/) on the paper allocation as performed with Corinna for NIPS
@@ -163,7 +161,7 @@ either of these situations arises then you need to email the area chair to
 reallocate the paper (this is the area chair's responsibility, but unfortunately
 CMT provides no way for the reviewer to know who the area chair for a given
 paper is). However, there is also no formal mechanism within CMT to inform newly
-allocated reviewers that they have gained a paper. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Assignment Diffs.ipynb) computes differences in allocation between the initial allocation
+allocated reviewers that they have gained a paper. [This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Assignment Diffs.ipynb) computes differences in allocation between the initial allocation
 file (as provided to the reviewers after edits by the area chairs). It then
 gives a list of emails for reviewers who have gained a paper. These reviewers
 can then be emailed to let them know they have a new paper in their allocation.
@@ -171,9 +169,9 @@ can then be emailed to let them know they have a new paper in their allocation.
 ### Reviewer Expertise
 
 We worked hard to try and create a body of reviewers with the right expertise.
-But did it work? In [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Reviewer Expertise.ipynb) we explore the
+But did it work? In [this notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Reviewer Expertise.ipynb) we explore the
 expertise of the NIPS 2014 reviewing body. We imported the number of papers
-associated with each reviewer since 2007 using [this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Update with NIPS Paper Publications.ipynb).
+associated with each reviewer since 2007 using [this notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Update with NIPS Paper Publications.ipynb).
 
 ## 3 After Reviews are Received
 
@@ -181,7 +179,7 @@ Once papers are received we can import reviewer scores for analysis. To do this
 you first export from CMT by going to [this page](https://cmt.research.microsoft
 .com/NIPS2014/Protected/Chair/PaperDecisionMaking/PaperDecision.aspx) end
 `Export->Reviews to Excel`. Then they can be analyzed in [this
-notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Import Review Scores.ipynb).
+notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Import Review Scores.ipynb).
 
 The program chairs have a lot of information about the whole conference. One of
 the roles of the program chairs is to distribute this information as widely as
@@ -199,7 +197,7 @@ information sharing.
 Each reviewer may have their own idea about the scale of the reviews, but what
 is their idea? The program chairs have access to all reviews and can try to tell
 if one reviewer is (on average) more negative than another. In [this
-notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Reviewer Calibration.ipynb) we try and correct for individual
+notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Reviewer Calibration.ipynb) we try and correct for individual
 offsets from reviewers. The quality scores are calibrated and converted to a
 probability of acceptance (based on quality scores only) that allows for
 calibration across the whole conference. This information can be returned to the
@@ -213,7 +211,7 @@ for-nips/).
 It is often not very convenient for area chairs to trawl through all the pages
 of CMT checking for everything that might have gone wrong. To help with this
 job, we might want to automate some description of where the problems are. In
-[this notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Attention%20Report.ipynb) an automated report is constructed
+[this notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Attention%20Report.ipynb) an automated report is constructed
 for distribution amoungst area chairs to highlight any potential issues in their
 allocation (e.g. short reviews, low confidence reviews, papers at the borderline
 of acceptance). This is particularly useful before reviews are returned to
@@ -233,12 +231,12 @@ chairs. They are, if you will, a message passing interface. The program chairs
 place information about the calibration of the reviwer scores and any
 automatically generated warnings in the spreadsheet. The area chairs can then
 augment the spreadsheet with notes and the current position on accepts and
-rejects. [This notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Spreadsheet%20Reports.ipynb) creates and shares (via
+rejects. [This notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Spreadsheet%20Reports.ipynb) creates and shares (via
 Google docs) summary spreadsheet reports of paper status to groupings provided
 by the program chairs. These groupings may be 'buddy pairs' or teleconference
 groups. The groupings are downloaded form a different Google spreadsheet. Once
 those spreadsheet reports are created they can be updated with [this
-notebook](http://nbviewer.ipython.org/github/sods/conference/blob/master/Update%20Spreadsheets.ipynb) (assuming the area chairs haven't
+notebook](http://nbviewer.ipython.org/github/lawrennd/conference/blob/master/notebooks/Update%20Spreadsheets.ipynb) (assuming the area chairs haven't
 played with the formatting!).
 
 ## 5 Decision Time
